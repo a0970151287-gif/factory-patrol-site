@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>工廠安全巡邏機器人 — ROS2 DDS Security + SAC 深度強化學習</title>
+  <style>
+    :root {
+      --bg:       #111110;
+      --s1:       #1c1c1a;
+      --s2:       #252522;
+      --amber:    #d4930a;
+      --amber2:   #f0b52a;
+      --green:    #2ea874;
+      --coral:    #cc4c4c;
+      --orange:   #c4622a;
+      --text:     #ddd8cc;
+      --muted:    #807a6e;
+      --border:   rgba(212,147,10,0.18);
+      --r:        12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; }
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 99; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; background: rgba(17,17,16,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+    .logo { font-size: .9rem; font-weight: 700; color: var(--amber); letter-spacing: .04em; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: .82rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* HERO */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 7rem 1.5rem 5rem; }
+    .hero-tag { display: inline-block; padding: .3rem 1rem; border: 1px solid var(--border); border-radius: 99px; font-size: .73rem; color: var(--amber); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 1.8rem; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+    .hero h1 em { font-style: normal; color: var(--amber); }
+    .hero-en { font-size: .95rem; color: var(--muted); margin-bottom: 1.5rem; letter-spacing: .02em; }
+    .hero-desc { max-width: 620px; color: var(--muted); font-size: 1rem; margin-bottom: 3rem; }
+    .hero-desc strong { color: var(--text); }
+
+    .nums { display: flex; gap: 3rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
+    .num { text-align: center; }
+    .num-val { font-size: 2.2rem; font-weight: 800; color: var(--amber2); }
+    .num-lbl { font-size: .73rem; color: var(--muted); margin-top: .2rem; }
+
+    /* GENERIC SECTION */
+    section { padding: 5rem 1.5rem; }
+    .w { max-width: 1080px; margin: 0 auto; }
+    .tag { font-size: .72rem; color: var(--amber); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .5rem; }
+    h2 { font-size: clamp(1.4rem, 2.5vw, 1.9rem); font-weight: 700; margin-bottom: .6rem; }
+    .lead { color: var(--muted); max-width: 600px; margin-bottom: 2.8rem; }
+    .rule { width: 40px; height: 3px; background: linear-gradient(90deg, var(--amber), var(--green)); border-radius: 2px; margin-bottom: 2.2rem; }
+
+    /* ARCH SVG SECTION */
+    .arch-wrap { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem; overflow-x: auto; }
+    .arch-wrap svg { display: block; margin: 0 auto; max-width: 100%; }
+
+    /* MODULE CARDS */
+    .mods { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .mod { border-radius: var(--r); padding: 1.6rem; border: 1px solid; }
+    .mod-a { background: rgba(212,147,10,.07); border-color: rgba(212,147,10,.3); }
+    .mod-b { background: rgba(46,168,116,.07); border-color: rgba(46,168,116,.3); }
+    .mod-c { background: rgba(196,98,42,.07); border-color: rgba(196,98,42,.3); }
+    .mod-d { background: rgba(204,76,76,.07); border-color: rgba(204,76,76,.3); }
+    .mod-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .6rem; }
+    .mod-a .mod-label { color: var(--amber); }
+    .mod-b .mod-label { color: var(--green); }
+    .mod-c .mod-label { color: var(--orange); }
+    .mod-d .mod-label { color: var(--coral); }
+    .mod h3 { font-size: .95rem; font-weight: 700; margin-bottom: .8rem; }
+    .mod ul { list-style: none; }
+    .mod ul li { font-size: .82rem; color: var(--muted); padding: .2rem 0 .2rem 1rem; position: relative; }
+    .mod ul li::before { content: '›'; position: absolute; left: 0; }
+    .mod-a ul li::before { color: var(--amber); }
+    .mod-b ul li::before { color: var(--green); }
+    .mod-c ul li::before { color: var(--orange); }
+    .mod-d ul li::before { color: var(--coral); }
+
+    /* SAC TRAINING */
+    .train-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .code-box { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 1.2rem; }
+    .code-box .box-title { font-size: .72rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: .7rem; }
+    .code-box code { font-size: .78rem; color: var(--green); font-family: 'Cascadia Code','Fira Code','Consolas',monospace; line-height: 1.9; display: block; }
+
+    .flow { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; margin: 2rem 0 1.5rem; }
+    .flow-step { background: var(--s1); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .9rem; font-size: .8rem; font-weight: 600; }
+    .flow-arrow { color: var(--amber); font-size: 1rem; }
+
+    /* SECURITY */
+    .sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; }
+    .vuln-card { background: rgba(204,76,76,.06); border: 1px solid rgba(204,76,76,.25); border-radius: var(--r); padding: 1.4rem; }
+    .vuln-num { font-size: 2.2rem; font-weight: 800; color: var(--coral); }
+    .vuln-name { font-size: .78rem; font-weight: 700; color: var(--coral); letter-spacing: .06em; margin: .3rem 0 .6rem; }
+    .vuln-desc { font-size: .82rem; color: var(--muted); }
+    .fix-box { margin-top: 1.5rem; background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 1.4rem; }
+    .fix-box h4 { font-size: .85rem; font-weight: 700; margin-bottom: .6rem; color: var(--amber); }
+    .fix-box p { font-size: .83rem; color: var(--muted); }
+
+    /* TECH */
+    .tech-row { margin-bottom: 1.2rem; }
+    .tech-cat { font-size: .75rem; color: var(--muted); margin-bottom: .6rem; }
+    .badges { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .badge { padding: .3rem .85rem; border: 1px solid var(--border); border-radius: 99px; font-size: .78rem; color: var(--muted); background: var(--s1); }
+    .badge:hover { border-color: var(--amber); color: var(--amber); }
+
+    footer { text-align: center; padding: 2.5rem; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); }
+    footer strong { color: var(--text); }
+
+    /* LEVEL HEADERS */
+    .lv-header { display: flex; align-items: center; gap: .8rem; margin: 2rem 0 1rem; }
+    .lv-badge { padding: .25rem .8rem; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+    .lv1 { background: rgba(212,147,10,.18); color: var(--amber2); }
+    .lv2 { background: rgba(46,168,116,.18); color: var(--green); }
+    .lv-title { font-size: .95rem; font-weight: 600; color: var(--text); }
+    .lv-desc { font-size: .82rem; color: var(--muted); }
+
+    /* LEVEL 2 grid */
+    .l2-grid { display: flex; flex-direction: column; gap: 2rem; }
+    .l2-full { grid-column: 1 / -1; }
+    .l2-block { }
+    .l2-label { font-size: .85rem; font-weight: 700; letter-spacing: .08em; margin-bottom: .6rem; }
+    .l2-a { color: var(--amber); }
+    .l2-b { color: var(--green); }
+    .l2-c { color: var(--orange); }
+    .l2-d { color: var(--coral); }
+    
+
+    /* TABS */
+    .tabs { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
+    .tab-btn { padding: .45rem 1.2rem; border-radius: 8px; border: 1px solid var(--border); background: var(--s2); color: var(--muted); font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .tab-btn:hover { border-color: var(--amber); color: var(--text); }
+    .tab-btn.active { background: rgba(212,147,10,.15); border-color: var(--amber); color: var(--amber2); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    @media (max-width:600px) { .nav-links { display: none; } .nums { gap: 1.5rem; } }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Factory Patrol · ROS2</div>
+  <ul class="nav-links">
+    <li><a href="#arch">架構</a></li>
+    <li><a href="#modules">模組</a></li>
+    <li><a href="#training">訓練</a></li>
+    <li><a href="#security">資安</a></li>
+    <li><a href="#tech">技術棧</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">2026 · 專題</div>
+  <h1>工廠安全巡邏機器人<br/><em>讓機器人自己找路，也自己守門</em></h1>
+  <p class="hero-en">ROS2 DDS Encrypted Communication × SAC Deep Reinforcement Learning Navigation</p>
+  <p class="hero-desc">
+    這份專題把兩件事合在一起做：一是讓 TurtleBot3 Burger 用<strong>深度強化學習（SAC）</strong>學會在工廠場景中自主避障巡邏；
+    二是在 ROS2 通訊層加上<strong>DDS 加密憑證</strong>，再用<strong> LLM 自動找漏洞</strong>驗證防護效果。
+  </p>
+  <div class="nums">
+    <div class="num"><div class="num-val">4</div><div class="num-lbl">核心模組</div></div>
+    <div class="num"><div class="num-val">25D</div><div class="num-lbl">論文觀測空間</div></div>
+    <div class="num"><div class="num-val">3 M</div><div class="num-lbl">SAC 訓練步數目標</div></div>
+    <div class="num"><div class="num-val">31</div><div class="num-lbl">LLM 發現漏洞</div></div>
+    <div class="num"><div class="num-val">0.2s</div><div class="num-lbl">巡邏點更新延遲</div></div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="arch" style="background:var(--s1);">
+  <div class="w">
+    <p class="tag">System Architecture</p>
+    <h2>系統架構圖</h2>
+    <p class="lead">四個模組各司其職：A 負責導航、B 負責資安偵測、C 協調任務、D 測試 B 的漏洞。</p>
+    <div class="rule"></div>
+
+    <!-- LEVEL 1 -->
+    <div class="lv-header">
+      <span class="lv-badge lv1">Level 1</span>
+      <span class="lv-title">系統全貌 — 模組邊界與資料流</span>
+      <span class="lv-desc">四個模組的職責分工與跨模組通訊</span>
+    </div>
+    <div class="arch-wrap">
+      <svg viewBox="0 0 920 455" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:640px;font-family:'Segoe UI','PingFang TC',sans-serif;">
+        <defs>
+          <marker id="l1a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#d4930a"/></marker>
+          <marker id="l1g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#2ea874"/></marker>
+          <marker id="l1r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#cc4c4c"/></marker>
+        </defs>
+
+        <!-- External area -->
+        <rect x="3" y="3" width="914" height="88" rx="8" fill="none" stroke="#44443a" stroke-width="1.2" stroke-dasharray="6,4"/>
+        <text x="16" y="18" font-size="11" fill="#44443a" letter-spacing="1">外部系統 · EXTERNAL</text>
+
+        <!-- Gazebo -->
+        <rect x="14" y="20" width="255" height="63" rx="7" fill="#1e1e1c" stroke="#d4930a" stroke-width="1.5"/>
+        <text x="141" y="43" text-anchor="middle" font-size="15" font-weight="bold" fill="#f0b52a">Gazebo Harmonic</text>
+        <text x="141" y="60" text-anchor="middle" font-size="12" fill="#807a6e">TurtleBot3 Burger  /scan  /odom</text>
+        <text x="141" y="76" text-anchor="middle" font-size="11" fill="#807a6e">360° LiDAR · IMU · 物理引擎仿真</text>
+
+        <!-- OpenAI -->
+        <rect x="660" y="20" width="252" height="63" rx="7" fill="#1e1e1c" stroke="#d4930a" stroke-width="1.5"/>
+        <text x="786" y="43" text-anchor="middle" font-size="15" font-weight="bold" fill="#f0b52a">OpenAI API</text>
+        <text x="786" y="60" text-anchor="middle" font-size="12" fill="#807a6e">GPT-4o-mini → MutationAgent</text>
+        <text x="786" y="76" text-anchor="middle" font-size="11" fill="#807a6e">GPT-4o → TriageAgent</text>
+
+        <!-- System boundary -->
+        <rect x="3" y="96" width="914" height="354" rx="8" fill="none" stroke="#353530" stroke-width="1.8" stroke-dasharray="9,5"/>
+        <text x="16" y="112" font-size="10" fill="#353530" letter-spacing="1">系統邊界 · SYSTEM BOUNDARY</text>
+
+        <!-- ── Module A ── -->
+        <rect x="14" y="117" width="390" height="148" rx="9" fill="rgba(212,147,10,0.07)" stroke="#d4930a" stroke-width="2"/>
+        <rect x="14" y="117" width="390" height="28" rx="9" fill="rgba(212,147,10,0.22)"/>
+        <rect x="14" y="135" width="390" height="10" fill="rgba(212,147,10,0.22)"/>
+        <text x="209" y="134" text-anchor="middle" font-size="14" font-weight="bold" fill="#f0b52a">A — SAC 智慧巡航</text>
+        <text x="26" y="155" font-size="12" fill="#ddd8cc">SmartPatrolNode  ·  patrol_node.py</text>
+        <text x="26" y="172" font-size="11" fill="#807a6e">A1 WaypointManager → A2 ObservationBuilder (25D)</text>
+        <text x="26" y="189" font-size="11" fill="#807a6e">A3 SACPolicy [512→512] → A4 CommandPublisher</text>
+        <text x="26" y="206" font-size="11" fill="#807a6e">輸出 /cmd_vel @10Hz · lin [0,0.25m/s] · ang [±1.5rad/s]</text>
+        <text x="26" y="223" font-size="11" fill="#807a6e">巡邏 5 個工廠點，到達門檻 0.30m，動態巡邏點更新</text>
+        <text x="26" y="240" font-size="11" fill="#d4930a">訓練：3M steps · buffer 1M · net[512,512] · 論文對齊</text>
+        <text x="26" y="257" font-size="10" fill="#807a6e">Reward = lin_vel − |ang_vel|/2 − max(0,1.35−d)/2</text>
+
+        <!-- ── Module B ── -->
+        <rect x="516" y="117" width="390" height="148" rx="9" fill="rgba(46,168,116,0.07)" stroke="#2ea874" stroke-width="2"/>
+        <rect x="516" y="117" width="390" height="28" rx="9" fill="rgba(46,168,116,0.2)"/>
+        <rect x="516" y="135" width="390" height="10" fill="rgba(46,168,116,0.2)"/>
+        <text x="711" y="134" text-anchor="middle" font-size="14" font-weight="bold" fill="#2ea874">B — DDS 資安監控</text>
+        <text x="528" y="155" font-size="12" fill="#ddd8cc">DDSSecurityMonitor  ·  monitor_node.py</text>
+        <text x="528" y="172" font-size="11" fill="#807a6e">B1 WhitelistManager → B2 NodeScanner (1Hz)</text>
+        <text x="528" y="189" font-size="11" fill="#807a6e">B3 AnomalyDetector → B4 AlertPublisher</text>
+        <text x="528" y="206" font-size="11" fill="#807a6e">B5 EmergencyStop (覆蓋 /cmd_vel) · B6 EventLogger</text>
+        <text x="528" y="223" font-size="11" fill="#807a6e">SROS2 X.509 憑證 · AES-GCM 加密 · Domain 30</text>
+        <text x="528" y="240" font-size="11" fill="#cc4c4c">⚠ 31 筆白名單繞過漏洞（待修補）</text>
+
+        <!-- ── Row gap 40px: y=265 to y=305 — labels live here ── -->
+
+        <!-- ── Module C ── -->
+        <rect x="14" y="305" width="390" height="133" rx="9" fill="rgba(196,98,42,0.07)" stroke="#c4622a" stroke-width="2"/>
+        <rect x="14" y="305" width="390" height="28" rx="9" fill="rgba(196,98,42,0.2)"/>
+        <rect x="14" y="323" width="390" height="10" fill="rgba(196,98,42,0.2)"/>
+        <text x="209" y="322" text-anchor="middle" font-size="14" font-weight="bold" fill="#c4622a">C — 任務管理與系統狀態</text>
+        <text x="26" y="345" font-size="12" fill="#ddd8cc">mission_manager  ·  system_status  ·  sensor_hub</text>
+        <text x="26" y="362" font-size="11" fill="#807a6e">任務狀態機：巡邏 → 停止（警報）→ 恢復（30s）→ 巡邏</text>
+        <text x="26" y="379" font-size="11" fill="#807a6e">感測器融合：LiDAR + Odom，發布系統健康度</text>
+        <text x="26" y="396" font-size="11" fill="#807a6e">接收 /security/alerts (RELIABLE · TRANSIENT_LOCAL)</text>
+        <text x="26" y="413" font-size="11" fill="#807a6e">異常警報後 30s 自動恢復巡邏</text>
+        <text x="26" y="430" font-size="10" fill="#807a6e">發布 /system/status @1Hz</text>
+
+        <!-- ── Module D ── -->
+        <rect x="516" y="305" width="390" height="133" rx="9" fill="rgba(204,76,76,0.07)" stroke="#cc4c4c" stroke-width="2"/>
+        <rect x="516" y="305" width="390" height="28" rx="9" fill="rgba(204,76,76,0.18)"/>
+        <rect x="516" y="323" width="390" height="10" fill="rgba(204,76,76,0.18)"/>
+        <text x="711" y="322" text-anchor="middle" font-size="14" font-weight="bold" fill="#cc4c4c">D — LLM 智慧偵錯（離線）</text>
+        <text x="528" y="345" font-size="12" fill="#ddd8cc">MutationAgent → Queue(32) → SandboxExecutor → TriageAgent</text>
+        <text x="528" y="362" font-size="11" fill="#807a6e">以 LLM 自動生成攻擊測資，對 Module B 做系統性測試</text>
+        <text x="528" y="379" font-size="11" fill="#807a6e">Docker 隔離靶機，exit 2 = BYPASS FOUND</text>
+        <text x="528" y="396" font-size="11" fill="#cc4c4c">結果：31 筆 BYPASS（27× Namespace + 4× 前綴略過）</text>
+        <text x="528" y="413" font-size="11" fill="#807a6e">GPT-4o 分析繞過原因，輸出中文修補建議</text>
+        <text x="528" y="430" font-size="10" fill="#807a6e">SQLite 去重持久化，支援斷點續傳</text>
+
+        <!-- ════ ARROWS — explicit polygons, tip stops 3px BEFORE box border ════ -->
+
+        <!-- 1. Gazebo → A: tip stops at y=114 (3px before Module A top at y=117) -->
+        <line x1="141" y1="83" x2="141" y2="107" stroke="#d4930a" stroke-width="2"/>
+        <polygon points="134,107 148,107 141,114" fill="#d4930a"/>
+
+        <!-- 2. OpenAI → D: right margin route, tip stops at x=909 (3px before Module D right at x=906... pointing left) -->
+        <path d="M786,83 L912,83 L912,320" stroke="#d4930a" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+        <line x1="912" y1="320" x2="909" y2="320" stroke="#d4930a" stroke-width="1.5"/>
+        <polygon points="909,313 909,327 902,320" fill="#d4930a"/>
+        <text x="464" y="58" text-anchor="middle" font-size="11" fill="#807a6e">API (HTTP/REST)</text>
+
+        <!-- 3. B5 → A: horizontal in A-B gap, tip stops at x=407 (3px before Module A right at x=404) -->
+        <line x1="516" y1="195" x2="414" y2="195" stroke="#cc4c4c" stroke-width="2" stroke-dasharray="5,3"/>
+        <polygon points="414,188 414,202 407,195" fill="#cc4c4c"/>
+        <!-- label in the 40px row gap, well below the arrow, to the right of A→C arrow -->
+        <text x="460" y="283" text-anchor="middle" font-size="11" fill="#cc4c4c">B5 緊急停止 · /security/alerts</text>
+
+        <!-- 4a. A → C: tip stops at y=302 (3px before Module C top at y=305), label to the RIGHT -->
+        <line x1="180" y1="265" x2="180" y2="295" stroke="#d4930a" stroke-width="2"/>
+        <polygon points="173,295 187,295 180,302" fill="#d4930a"/>
+        <text x="193" y="285" font-size="10" fill="#807a6e">/cmd_vel</text>
+
+        <!-- 4b. B → C: tip stops at y=302, label to the RIGHT -->
+        <line x1="640" y1="265" x2="640" y2="295" stroke="#2ea874" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <polygon points="633,295 647,295 640,302" fill="#2ea874"/>
+        <text x="653" y="285" font-size="10" fill="#807a6e">alerts</text>
+
+        <!-- 5. D → B: up through gap, right margin, tip stops at x=909 (3px before B right at x=906) -->
+        <path d="M780,305 L780,285 L912,285 L912,150" stroke="#cc4c4c" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+        <line x1="912" y1="150" x2="909" y2="150" stroke="#cc4c4c" stroke-width="1.5"/>
+        <polygon points="909,143 909,157 902,150" fill="#cc4c4c"/>
+        <text x="870" y="283" text-anchor="end" font-size="10" fill="#cc4c4c">D 驗證 B 漏洞</text>
+      </svg>
+    </div>
+
+    <!-- LEVEL 2 -->
+    <div class="lv-header" style="margin-top:3rem;">
+      <span class="lv-badge lv2">Level 2</span>
+      <span class="lv-title">模組展開 — 各子元件細節</span>
+      <span class="lv-desc">每個模組內部的元件流程與關鍵參數</span>
+    </div>
+    <div class="l2-grid">
+
+      <!-- L2A -->
+      <div class="l2-block">
+        <div class="l2-label l2-a">MODULE A — SAC 智慧巡航 · SmartPatrolNode</div>
+        <div class="arch-wrap">
+          <svg viewBox="0 0 760 555" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:'Segoe UI','PingFang TC',sans-serif;">
+            <text x="90" y="14" text-anchor="middle" font-size="11" fill="#807a6e">/scan (360pts)</text>
+            <text x="380" y="14" text-anchor="middle" font-size="11" fill="#807a6e">/odom (x,y,yaw)</text>
+            <line x1="90"  y1="17" x2="90"  y2="25" stroke="#807a6e" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <polygon points="85,25 95,25 90,31" fill="#807a6e"/>
+            <line x1="380" y1="17" x2="380" y2="25" stroke="#807a6e" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <polygon points="375,25 385,25 380,31" fill="#807a6e"/>
+            <!-- A1: y=31 h=105 bot=136 -->
+            <rect x="10" y="31" width="740" height="105" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
+            <text x="28" y="53" font-size="14" font-weight="bold" fill="#f0b52a">A1 — WaypointManager</text>
+            <text x="28" y="71" font-size="12" fill="#ddd8cc">佇列（隨機順序）：電源控制室(-1.5,-1.5) → 冷卻水塔(1.5,-1.5) → 生產線A(-1.5,1.5) → 生產線B(1.5,1.5) → 出入口(0,-1.8)</text>
+            <text x="28" y="88" font-size="11" fill="#807a6e">/patrol/goto (JSON) → 即時重定向，清空佇列  ·  /patrol/reload (Trigger) → 整批更新 waypoints.yaml</text>
+            <text x="28" y="105" font-size="11" fill="#807a6e">計算 goal_dx, goal_dy → dist = hypot(dx,dy)  ·  到達門檻 0.30m → 切換下一巡邏點</text>
+            <text x="28" y="122" font-size="10" fill="#807a6e">卡住偵測：3s 未移動 → 倒退 −0.08m/s + 交替左右轉向，連續卡住轉角遞增</text>
+            <line x1="380" y1="136" x2="380" y2="166" stroke="#d4930a" stroke-width="2.5"/>
+            <polygon points="373,166 387,166 380,176" fill="#d4930a"/>
+            <text x="394" y="161" font-size="12" font-weight="600" fill="#d4930a">dist, angle</text>
+            <!-- A2: y=176 h=100 bot=276 -->
+            <rect x="10" y="176" width="740" height="100" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
+            <text x="28" y="198" font-size="14" font-weight="bold" fill="#f0b52a">A2 — ObservationBuilder  →  state [25]</text>
+            <text x="28" y="216" font-size="12" fill="#ddd8cc">LiDAR 360 點 → 20 bins（每 bin 取最小值）·  inf → 7.0  ·  clip [0.0, 7.0]</text>
+            <text x="28" y="233" font-size="12" fill="#ddd8cc">concat：bins[0..19] + [dist] + [cos(angle), sin(angle)] + [prev_lin, prev_ang] = 25D</text>
+            <text x="28" y="250" font-size="11" fill="#807a6e">cos/sin 編碼解決角度週期性問題（0° 和 360° 不連續，cos/sin 連續）</text>
+            <text x="28" y="267" font-size="11" fill="#807a6e">prev_vel 讓模型感知慣性，避免過激轉向；輸入來源 /scan + /odom</text>
+            <line x1="380" y1="276" x2="380" y2="306" stroke="#d4930a" stroke-width="2.5"/>
+            <polygon points="373,306 387,306 380,316" fill="#d4930a"/>
+            <text x="394" y="301" font-size="12" font-weight="600" fill="#d4930a">obs[25]</text>
+            <!-- A3: y=316 h=95 bot=411 -->
+            <rect x="10" y="316" width="740" height="95" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
+            <text x="28" y="338" font-size="14" font-weight="bold" fill="#f0b52a">A3 — SACPolicy  ·  Actor Net  [25 → 512 → 512 → 2]</text>
+            <text x="28" y="356" font-size="12" fill="#ddd8cc">Stable Baselines3 SAC  ·  推論時 deterministic=True（不加探索雜訊）</text>
+            <text x="28" y="373" font-size="11" fill="#807a6e">訓練：buffer 1M · batch 256 · LR 3e-4 · γ=0.99 · τ=0.005 · ent_coef=auto · 目標 3M steps</text>
+            <text x="28" y="390" font-size="11" fill="#807a6e">Reward = lin_vel − |ang_vel|/2 − max(0,1.35−min_range)/2  ·  Goal +100  ·  Collision −100</text>
+            <text x="28" y="403" font-size="10" fill="#807a6e">GPU RTX 5070 Laptop · CUDA · PyTorch</text>
+            <line x1="380" y1="411" x2="380" y2="441" stroke="#d4930a" stroke-width="2.5"/>
+            <polygon points="373,441 387,441 380,451" fill="#d4930a"/>
+            <text x="394" y="436" font-size="12" font-weight="600" fill="#d4930a">action[v,ω] ∈ [−1,1]²</text>
+            <!-- A4: y=451 h=95 bot=546 -->
+            <rect x="10" y="451" width="740" height="95" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
+            <text x="28" y="473" font-size="14" font-weight="bold" fill="#f0b52a">A4 — CommandPublisher  →  /cmd_vel  @  10 Hz</text>
+            <text x="28" y="491" font-size="12" fill="#ddd8cc">lin_vel = (action[0]+1)/2 × 0.25 m/s  （永遠前進，範圍 [0, 0.25]，不倒退）</text>
+            <text x="28" y="508" font-size="12" fill="#ddd8cc">ang_vel = action[1] × 1.5 rad/s         （左負右正，範圍 [−1.5, 1.5]）</text>
+            <text x="28" y="525" font-size="11" fill="#807a6e">發布 TwistStamped，frame_id=base_link  ·  float() 強制轉型防 numpy scalar 錯誤</text>
+            <text x="28" y="538" font-size="11" fill="#cc4c4c">收到 /security/alerts → 強制 v=0, ω=0  ·  B5 EmergencyStop 優先覆蓋此輸出</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L2B -->
+      <div class="l2-block">
+        <div class="l2-label l2-b">MODULE B — DDS 資安監控 · DDSSecurityMonitor</div>
+        <div class="arch-wrap">
+          <svg viewBox="0 0 760 545" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:'Segoe UI','PingFang TC',sans-serif;">
+            <!-- B1: y=10 h=88 bot=98 -->
+            <rect x="10" y="10" width="740" height="88" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="28" y="32" font-size="14" font-weight="bold" fill="#2ea874">B1 — WhitelistManager  ·  9 個合法節點</text>
+            <text x="28" y="50" font-size="12" fill="#ddd8cc">patrol_node · monitor_node · sensor_hub_node · mission_manager_node · system_status_node</text>
+            <text x="28" y="67" font-size="11" fill="#807a6e">robot_state_publisher · ros_gz_bridge · gz_sim_* · transform_listener_*</text>
+            <text x="28" y="83" font-size="11" fill="#807a6e">儲存於記憶體 Set，支援動態增減</text>
+            <line x1="380" y1="98" x2="380" y2="128" stroke="#2ea874" stroke-width="2.5"/>
+            <polygon points="373,128 387,128 380,138" fill="#2ea874"/>
+            <text x="394" y="123" font-size="12" font-weight="600" fill="#2ea874">whitelist</text>
+            <!-- B2: y=138 h=88 bot=226 -->
+            <rect x="10" y="138" width="740" height="88" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="28" y="160" font-size="14" font-weight="bold" fill="#2ea874">B2 — NodeScanner  ·  get_node_names()  @  1 Hz</text>
+            <text x="28" y="178" font-size="12" fill="#ddd8cc">輪詢 ROS2 Graph API，取得目前所有節點全路徑（/namespace/node_name）</text>
+            <text x="28" y="195" font-size="11" fill="#807a6e">新出現的節點（不在快取）→ 傳給 B3  ·  節點離線 → 自動從追蹤移除</text>
+            <text x="28" y="211" font-size="11" fill="#807a6e">Domain 30 內所有 DDS 參與者均須持有 SROS2 X.509 憑證才能加入</text>
+            <line x1="380" y1="226" x2="380" y2="256" stroke="#2ea874" stroke-width="2.5"/>
+            <polygon points="373,256 387,256 380,266" fill="#2ea874"/>
+            <text x="394" y="251" font-size="12" font-weight="600" fill="#2ea874">未知節點路徑</text>
+            <!-- B3: y=266 h=112 bot=378 -->
+            <rect x="10" y="266" width="740" height="112" rx="8" fill="rgba(46,168,116,0.05)" stroke="#cc4c4c" stroke-width="2" stroke-dasharray="6,3"/>
+            <text x="28" y="288" font-size="14" font-weight="bold" fill="#2ea874">B3 — AnomalyDetector  ·  白名單比對</text>
+            <text x="28" y="306" font-size="12" fill="#ddd8cc">short_name = full_path.rsplit('/', 1)[-1]   →   比對 B1 白名單</text>
+            <rect x="18" y="312" width="724" height="19" rx="3" fill="rgba(204,76,76,0.18)"/>
+            <text x="28" y="325" font-size="12" fill="#cc4c4c">⚠ 漏洞：只比對短名 → /attacker/patrol_node 和 /patrol_node 視為相同，27 筆 BYPASS</text>
+            <rect x="18" y="333" width="724" height="19" rx="3" fill="rgba(204,76,76,0.18)"/>
+            <text x="28" y="346" font-size="12" fill="#cc4c4c">⚠ 漏洞：startswith('_') / 'ros_gz' / 'dqn' / 'launch_ros' → 靜默略過，4 筆 BYPASS</text>
+            <text x="28" y="367" font-size="11" fill="#807a6e">發現異常 → 同時觸發 B4 + B5 + B6  ·  LLM Fuzzer（D）已驗證記錄 31 筆漏洞</text>
+            <!-- T-bar fan-out: stem, bar, 3 drops — all BELOW B3 bottom (y=378) -->
+            <line x1="380" y1="378" x2="380" y2="398" stroke="#2ea874" stroke-width="2.5"/>
+            <line x1="129" y1="398" x2="631" y2="398" stroke="#2ea874" stroke-width="2.5"/>
+            <line x1="129" y1="398" x2="129" y2="428" stroke="#2ea874" stroke-width="2"/>
+            <polygon points="122,428 136,428 129,435" fill="#2ea874"/>
+            <line x1="380" y1="398" x2="380" y2="428" stroke="#cc4c4c" stroke-width="2.5"/>
+            <polygon points="373,428 387,428 380,435" fill="#cc4c4c"/>
+            <line x1="631" y1="398" x2="631" y2="428" stroke="#2ea874" stroke-width="2"/>
+            <polygon points="624,428 638,428 631,435" fill="#2ea874"/>
+            <!-- B4/B5/B6: y=435 -->
+            <rect x="10" y="435" width="238" height="100" rx="7" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="129" y="457" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">B4 — AlertPublisher</text>
+            <text x="129" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">/security/alerts</text>
+            <text x="129" y="492" text-anchor="middle" font-size="11" fill="#807a6e">RELIABLE + TRANSIENT_LOCAL</text>
+            <text x="129" y="509" text-anchor="middle" font-size="11" fill="#807a6e">JSON：節點名 + 時間 + 原因</text>
+            <text x="129" y="526" text-anchor="middle" font-size="10" fill="#807a6e">→ patrol + mission_manager</text>
+            <rect x="258" y="435" width="244" height="100" rx="7" fill="rgba(204,76,76,0.12)" stroke="#cc4c4c" stroke-width="2"/>
+            <text x="380" y="457" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">B5 — EmergencyStop ⚡</text>
+            <text x="380" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">強制發布 /cmd_vel v=0, ω=0</text>
+            <text x="380" y="492" text-anchor="middle" font-size="11" fill="#807a6e">持續 3 秒壓制 A4 輸出</text>
+            <text x="380" y="509" text-anchor="middle" font-size="11" fill="#cc4c4c">優先級高於 SmartPatrolNode</text>
+            <text x="380" y="526" text-anchor="middle" font-size="11" fill="#807a6e">3s 後恢復 RL 控制</text>
+            <rect x="512" y="435" width="238" height="100" rx="7" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="631" y="457" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">B6 — EventLogger</text>
+            <text x="631" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">時間戳 + 節點名 + 命名空間</text>
+            <text x="631" y="492" text-anchor="middle" font-size="11" fill="#807a6e">嚴重程度分級</text>
+            <text x="631" y="509" text-anchor="middle" font-size="11" fill="#807a6e">ROS2 Logger 標準輸出</text>
+            <text x="631" y="526" text-anchor="middle" font-size="10" fill="#807a6e">可接 rosbag 錄製</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- L2D -->
+      <div class="l2-block l2-full">
+        <div class="l2-label l2-d">MODULE D — LLM 智慧偵錯系統（離線驗證工具）</div>
+        <div class="arch-wrap">
+          <svg viewBox="0 0 1100 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:700px;font-family:'Segoe UI','PingFang TC',sans-serif;">
+            <!-- D1 -->
+            <rect x="10" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
+            <text x="102" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D1 — MutationAgent</text>
+            <text x="102" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">GPT-4o-mini</text>
+            <text x="102" y="73" text-anchor="middle" font-size="11" fill="#807a6e">生成攻擊 JSON 測資</text>
+            <text x="102" y="90" text-anchor="middle" font-size="10" fill="#807a6e">{"node_name":"...",</text>
+            <text x="102" y="106" text-anchor="middle" font-size="10" fill="#807a6e"> "namespace":"..."}</text>
+            <text x="102" y="127" text-anchor="middle" font-size="11" fill="#807a6e">策略：Namespace 欺騙</text>
+            <text x="102" y="144" text-anchor="middle" font-size="11" fill="#807a6e">策略：前綴靜默繞過</text>
+            <text x="102" y="161" text-anchor="middle" font-size="11" fill="#807a6e">策略：特殊字元混淆</text>
+            <text x="102" y="178" text-anchor="middle" font-size="11" fill="#807a6e">LLM 失敗 → 後備變異</text>
+            <text x="102" y="196" text-anchor="middle" font-size="10" fill="#807a6e">種子：patrol_node/attacker</text>
+            <line x1="194" y1="110" x2="224" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
+            <polygon points="224,103 224,117 234,110" fill="#cc4c4c"/>
+            <text x="214" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">JSON</text>
+            <!-- D2 -->
+            <rect x="234" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
+            <text x="326" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D2 — Queue</text>
+            <text x="326" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">asyncio.Queue(32)</text>
+            <text x="326" y="75" text-anchor="middle" font-size="11" fill="#807a6e">1 Producer</text>
+            <text x="326" y="92" text-anchor="middle" font-size="11" fill="#807a6e">4 Consumer</text>
+            <text x="326" y="115" text-anchor="middle" font-size="11" fill="#807a6e">Pipeline 解耦</text>
+            <text x="326" y="132" text-anchor="middle" font-size="11" fill="#807a6e">Producer /</text>
+            <text x="326" y="149" text-anchor="middle" font-size="11" fill="#807a6e">Consumer 非同步</text>
+            <text x="326" y="170" text-anchor="middle" font-size="11" fill="#807a6e">容量滿時背壓</text>
+            <line x1="418" y1="110" x2="448" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
+            <polygon points="448,103 448,117 458,110" fill="#cc4c4c"/>
+            <text x="438" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">×4</text>
+            <!-- D3 -->
+            <rect x="458" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
+            <text x="550" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D3 — SandboxExecutor</text>
+            <text x="550" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">Docker 隔離執行</text>
+            <text x="550" y="75" text-anchor="middle" font-size="11" fill="#807a6e">network=none</text>
+            <text x="550" y="92" text-anchor="middle" font-size="11" fill="#807a6e">mem_limit=256m</text>
+            <text x="550" y="115" text-anchor="middle" font-size="12" fill="#ddd8cc">靶機：target_monitor.py</text>
+            <text x="550" y="132" text-anchor="middle" font-size="11" fill="#807a6e">複製 B3 白名單邏輯</text>
+            <text x="550" y="155" text-anchor="middle" font-size="12" fill="#2ea874">exit 0 = BLOCKED ✓</text>
+            <text x="550" y="173" text-anchor="middle" font-size="12" fill="#cc4c4c">exit 2 = BYPASS ⚠</text>
+            <line x1="642" y1="110" x2="672" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
+            <polygon points="672,103 672,117 682,110" fill="#cc4c4c"/>
+            <text x="662" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">BYPASS</text>
+            <!-- D4 -->
+            <rect x="682" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
+            <text x="774" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D4 — TriageAgent</text>
+            <text x="774" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">GPT-4o 分析</text>
+            <text x="774" y="75" text-anchor="middle" font-size="11" fill="#807a6e">繞過原因分類</text>
+            <text x="774" y="92" text-anchor="middle" font-size="11" fill="#807a6e">嚴重程度評級</text>
+            <text x="774" y="115" text-anchor="middle" font-size="12" fill="#cc4c4c">CRITICAL: Namespace</text>
+            <text x="774" y="132" text-anchor="middle" font-size="12" fill="#cc4c4c">HIGH: 前綴略過</text>
+            <text x="774" y="154" text-anchor="middle" font-size="11" fill="#807a6e">輸出中文修補建議</text>
+            <text x="774" y="171" text-anchor="middle" font-size="11" fill="#807a6e">→ B3 修補清單</text>
+            <line x1="866" y1="110" x2="896" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
+            <polygon points="896,103 896,117 906,110" fill="#cc4c4c"/>
+            <text x="886" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">儲存</text>
+            <!-- D5 -->
+            <rect x="906" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
+            <text x="998" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D5 — StateDB</text>
+            <text x="998" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">SQLite 持久化</text>
+            <text x="998" y="75" text-anchor="middle" font-size="11" fill="#807a6e">Hash 去重防重複</text>
+            <text x="998" y="92" text-anchor="middle" font-size="11" fill="#807a6e">崩潰報告庫</text>
+            <text x="998" y="115" text-anchor="middle" font-size="11" fill="#807a6e">Session 斷點續傳</text>
+            <text x="998" y="143" text-anchor="middle" font-size="16" font-weight="bold" fill="#cc4c4c">31 筆 BYPASS</text>
+            <text x="998" y="163" text-anchor="middle" font-size="12" fill="#807a6e">27× Namespace</text>
+            <text x="998" y="181" text-anchor="middle" font-size="12" fill="#807a6e">4× Prefix</text>
+          </svg>
+        </div>
+      </div>
+
+    </div><!-- end l2-grid -->
+  </div>
+</section>
+
+<!-- MODULES -->
+<section id="modules">
+  <div class="w">
+    <p class="tag">Modules · Level 2</p>
+    <h2>各模組細節</h2>
+    <p class="lead">每個模組展開後的關鍵設計決策與實作細節。</p>
+    <div class="rule"></div>
+    <div class="mods">
+      <div class="mod mod-a">
+        <div class="mod-label">Module A · SAC 巡航</div>
+        <h3>SmartPatrolNode</h3>
+        <ul>
+          <li>SAC 演算法（Stable Baselines3），論文完整復現</li>
+          <li>觀測空間 25 維：20 個 LiDAR bin（每 bin 取最小值）+ 目標距離 + cos(θ) + sin(θ) + 前一步速度</li>
+          <li>cos/sin 編碼避免角度週期性問題（0° 和 360° 不連續）</li>
+          <li>動態巡邏點：/patrol/goto topic 即時重定向，/patrol/reload 整批更新</li>
+          <li>卡住偵測：3 秒未移動 → 倒退 2 秒 + 交替左右轉向</li>
+          <li>安全優先：收到 /security/alerts 立刻 v=0, ω=0</li>
+        </ul>
+      </div>
+      <div class="mod mod-b">
+        <div class="mod-label">Module B · 資安監控</div>
+        <h3>DDSSecurityMonitor</h3>
+        <ul>
+          <li>SROS2：每個節點持有 X.509 憑證，沒有憑證無法加入 Domain 30</li>
+          <li>DDS 加密：AES-GCM 加密訊息內容，HMAC-SHA256 驗簽名</li>
+          <li>permissions.xml 最小權限原則：patrol_node 只能訂閱 /scan /odom，只能發布 /cmd_vel</li>
+          <li>NodeScanner 每秒輪詢 DDS 圖，對比合法節點白名單（9 個）</li>
+          <li>偵測到異常 → 發布 /security/alerts（RELIABLE + TRANSIENT_LOCAL）→ 停止機器人</li>
+          <li>已知漏洞：白名單只比對短名，命名空間欺騙可繞過（待修補）</li>
+        </ul>
+      </div>
+      <div class="mod mod-c">
+        <div class="mod-label">Module C · 任務管理</div>
+        <h3>Mission & Status Nodes</h3>
+        <ul>
+          <li>mission_manager：訂閱警報，管理任務狀態機（巡邏 / 停止 / 恢復）</li>
+          <li>警報後自動等待 30 秒恢復，可設定</li>
+          <li>system_status_node：對外廣播節點健康度和任務進度</li>
+          <li>sensor_hub_node：LiDAR + Odom 資料融合與分發</li>
+        </ul>
+      </div>
+      <div class="mod mod-d">
+        <div class="mod-label">Module D · LLM 模糊測試</div>
+        <h3>LLM Fuzzer</h3>
+        <ul>
+          <li>MutationAgent（GPT-4o-mini）：生成惡意節點名稱測資，策略涵蓋命名空間欺騙、前綴繞過</li>
+          <li>asyncio.Queue（容量 32）：1 Producer + 4 Consumer，Pipeline 解耦</li>
+          <li>Docker Sandbox：network=none，mem_limit=256m，隔離執行靶機</li>
+          <li>靶機 target_monitor.py：完整複製 B3 的白名單邏輯，exit 2 = BYPASS FOUND</li>
+          <li>TriageAgent（GPT-4o）：分析繞過原因，輸出嚴重程度與修補建議</li>
+          <li>SQLite StateDB：Hash 去重防重複，支援斷點續傳</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRAINING -->
+<section id="training" style="background:var(--s1);">
+  <div class="w">
+    <p class="tag">SAC Training · Paper Aligned</p>
+    <h2>SAC 訓練設計</h2>
+    <p class="lead">完整對齊論文 <em>reiniscimurs/DRL-Robot-Navigation-ROS2</em>，從觀測空間到超參數全部照搬。</p>
+    <div class="rule"></div>
+
+    <div class="flow">
+      <div class="flow-step">Gazebo 隨機起點</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">LiDAR 360 點 → 20 bins</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">concat 目標資訊 + prev_vel</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Actor [512 × 512]</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">action[v, ω]</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Reward 計算</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Replay Buffer 1M</div>
+    </div>
+
+    <div class="train-grid">
+      <div class="code-box">
+        <div class="box-title">State Space · 25D</div>
+        <code>bins[0..19]  = min(LiDAR / bin)<br/>bins[20]     = dist_to_goal<br/>bins[21]     = cos(angle)<br/>bins[22]     = sin(angle)<br/>bins[23]     = prev_lin_vel<br/>bins[24]     = prev_ang_vel</code>
+      </div>
+      <div class="code-box">
+        <div class="box-title">Reward Function</div>
+        <code>goal reached  → +100<br/>collision     → −100<br/><br/>else:<br/>  r = v<br/>    − |ω| / 2<br/>    − max(0, 1.35 − d) / 2</code>
+      </div>
+      <div class="code-box">
+        <div class="box-title">SAC Hyperparameters</div>
+        <code>net_arch      = [512, 512]<br/>buffer_size   = 1_000_000<br/>batch_size    = 256<br/>learning_rate = 3e-4<br/>gamma         = 0.99<br/>tau           = 0.005<br/>ent_coef      = "auto"<br/>total_steps   = 3_000_000</code>
+      </div>
+      <div class="code-box">
+        <div class="box-title">Action Space</div>
+        <code>action[0] ∈ [−1, 1]<br/>  → lin = (a+1)/2 × 0.25 m/s<br/>     (永遠前進，不倒退)<br/><br/>action[1] ∈ [−1, 1]<br/>  → ang = a × 1.5 rad/s<br/>     (左右轉向)</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY FINDINGS -->
+<section id="security">
+  <div class="w">
+    <p class="tag">Security Findings · LLM Fuzzer</p>
+    <h2>資安測試結果</h2>
+    <p class="lead">用 LLM 模糊測試對 Module B 白名單邏輯進行系統性測試，共發現 31 筆繞過漏洞。</p>
+    <div class="rule"></div>
+    <div class="sec-grid">
+      <div class="vuln-card">
+        <div class="vuln-num">27</div>
+        <div class="vuln-name">WHITELIST_NAME_MATCH — CRITICAL</div>
+        <div class="vuln-desc">
+          白名單比對只看節點短名（<code style="color:#cc4c4c;font-size:.8rem;">rsplit('/', 1)[-1]</code>），
+          攻擊者在任意命名空間下使用合法名稱（如 <code style="color:#cc4c4c;font-size:.8rem;">/attacker/patrol_node</code>）即可通過白名單，完全偽裝成合法節點。
+        </div>
+      </div>
+      <div class="vuln-card">
+        <div class="vuln-num">4</div>
+        <div class="vuln-name">UNDERSCORE_PREFIX — HIGH</div>
+        <div class="vuln-desc">
+          節點名以 <code style="color:#cc4c4c;font-size:.8rem;">_</code> 開頭時，偵測邏輯直接 <code style="color:#cc4c4c;font-size:.8rem;">continue</code> 跳過，不進入白名單比對。
+          攻擊者只需在節點名前加底線，即可完全隱身。
+        </div>
+      </div>
+      <div class="vuln-card">
+        <div class="vuln-num">3 × 1</div>
+        <div class="vuln-name">PREFIX BYPASS — HIGH</div>
+        <div class="vuln-desc">
+          <code style="color:#cc4c4c;font-size:.8rem;">ros_gz</code>、<code style="color:#cc4c4c;font-size:.8rem;">dqn</code>、<code style="color:#cc4c4c;font-size:.8rem;">launch_ros</code> 開頭的節點同樣被靜默略過，
+          各前綴各發現 1 筆繞過。原意是略過內部工具節點，但沒有任何驗證機制。
+        </div>
+      </div>
+    </div>
+    <div class="fix-box">
+      <h4>修補方向（尚未實作）</h4>
+      <p>
+        根本解法是<strong>改白名單比對為全路徑（namespace + name）</strong>，並移除所有無條件略過前綴。
+        更強的做法是把偵測邏輯的信任來源換成 SROS2 憑證本身——有憑證才算合法，不靠名稱白名單。
+        目前漏洞已記錄在 Module B 的 AnomalyDetector 中，等 SAC 訓練完成後一起修補。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech" style="background:var(--s1);">
+  <div class="w">
+    <p class="tag">Tech Stack</p>
+    <h2>用到的東西</h2>
+    <div class="rule"></div>
+    <div class="tech-row"><div class="tech-cat">機器人框架</div><div class="badges"><span class="badge">ROS2 Humble</span><span class="badge">Gazebo Harmonic</span><span class="badge">TurtleBot3 Burger</span><span class="badge">SROS2</span><span class="badge">ros_gz_bridge</span></div></div>
+    <div class="tech-row"><div class="tech-cat">深度強化學習</div><div class="badges"><span class="badge">PyTorch + CUDA</span><span class="badge">Stable Baselines3 2.8</span><span class="badge">Gymnasium 1.2</span><span class="badge">RTX 5070 Laptop</span><span class="badge">TensorBoard</span></div></div>
+    <div class="tech-row"><div class="tech-cat">資安 / 密碼學</div><div class="badges"><span class="badge">X.509 / PKI</span><span class="badge">AES-GCM</span><span class="badge">OpenSSL</span><span class="badge">DDS Security 1.1</span><span class="badge">HMAC-SHA256</span></div></div>
+    <div class="tech-row"><div class="tech-cat">LLM 模糊測試</div><div class="badges"><span class="badge">GPT-4o / GPT-4o-mini</span><span class="badge">Docker Sandbox</span><span class="badge">AddressSanitizer</span><span class="badge">SQLite</span><span class="badge">asyncio</span></div></div>
+    <div class="tech-row"><div class="tech-cat">開發環境</div><div class="badges"><span class="badge">WSL2 Ubuntu 24.04</span><span class="badge">Python 3.12</span><span class="badge">VS Code </span></div></div>
+  </div>
+</section>
+
+<footer>
+  <strong>工廠安全巡邏機器人</strong> &nbsp;·&nbsp; ROS2 DDS Security + SAC Navigation &nbsp;·&nbsp; 2026
+</footer>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
