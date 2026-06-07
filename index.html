@@ -218,12 +218,12 @@
         <rect x="14" y="135" width="390" height="10" fill="rgba(212,147,10,0.22)"/>
         <text x="209" y="134" text-anchor="middle" font-size="14" font-weight="bold" fill="#f0b52a">A — TQC 智慧巡航</text>
         <text x="26" y="155" font-size="12" fill="#ddd8cc">SmartPatrolNode  ·  patrol_node.py</text>
-        <text x="26" y="172" font-size="11" fill="#807a6e">A1 WaypointManager → A2 ObservationBuilder (25D)</text>
+        <text x="26" y="172" font-size="11" fill="#807a6e">A1 WaypointManager → A2 ObservationBuilder (744D)</text>
         <text x="26" y="189" font-size="11" fill="#807a6e">A3 TQCPolicy [256→256] + 1D-Conv → A4 CommandPublisher</text>
-        <text x="26" y="206" font-size="11" fill="#807a6e">輸出 /cmd_vel @10Hz · lin [0,0.25m/s] · ang [±1.5rad/s]</text>
-        <text x="26" y="223" font-size="11" fill="#807a6e">巡邏 5 個工廠點，到達門檻 0.30m，動態巡邏點更新</text>
-        <text x="26" y="240" font-size="11" fill="#d4930a">訓練：3M steps · buffer 1M · net[512,512] · 論文對齊</text>
-        <text x="26" y="257" font-size="10" fill="#807a6e">Reward = lin_vel − |ang_vel|/2 − max(0,1.35−d)/2</text>
+        <text x="26" y="206" font-size="11" fill="#807a6e">輸出 /cmd_vel @10Hz · lin [0,0.22m/s] · ang [±1.5rad/s]</text>
+        <text x="26" y="223" font-size="11" fill="#807a6e">巡邏 5 個工廠點 · curriculum 1→5 自動升級 · DR + 5% 對抗</text>
+        <text x="26" y="240" font-size="11" fill="#d4930a">訓練：2M steps · buffer 1M · 1D-Conv + LayerNorm · Tier-1 設計</text>
+        <text x="26" y="257" font-size="10" fill="#807a6e">Reward = γ·Φ(s') − Φ(s) (Ng-Harada-Russell 1999 potential-based)</text>
 
         <!-- ── Module B ── -->
         <rect x="516" y="117" width="390" height="148" rx="9" fill="rgba(46,168,116,0.07)" stroke="#2ea874" stroke-width="2"/>
@@ -231,10 +231,10 @@
         <rect x="516" y="135" width="390" height="10" fill="rgba(46,168,116,0.2)"/>
         <text x="711" y="134" text-anchor="middle" font-size="14" font-weight="bold" fill="#2ea874">B — DDS 資安監控</text>
         <text x="528" y="155" font-size="12" fill="#ddd8cc">DDSSecurityMonitor  ·  monitor_node.py</text>
-        <text x="528" y="172" font-size="11" fill="#807a6e">B1 WhitelistManager → B2 NodeScanner (1Hz)</text>
-        <text x="528" y="189" font-size="11" fill="#807a6e">B3 AnomalyDetector → B4 AlertPublisher</text>
-        <text x="528" y="206" font-size="11" fill="#807a6e">B5 EmergencyStop (覆蓋 /cmd_vel) · B6 EventLogger</text>
-        <text x="528" y="223" font-size="11" fill="#807a6e">SROS2 X.509 憑證 · AES-GCM 加密 · Domain 30</text>
+        <text x="528" y="172" font-size="11" fill="#807a6e">B1 WhitelistManager + baseline 快照 → B2 NodeScanner (5s)</text>
+        <text x="528" y="189" font-size="11" fill="#807a6e">B3 AnomalyDetector → B4 AlertPublisher (HMAC envelope v3)</text>
+        <text x="528" y="206" font-size="11" fill="#807a6e">B5 EmergencyStop (各下游驗章後自停) · B6 EventLogger (throttle)</text>
+        <text x="528" y="223" font-size="11" fill="#807a6e">HMAC-SHA256 + channel binding + ReplayCache · Domain 30 隔離</text>
         <text x="528" y="240" font-size="11" fill="#2ea874">✓ 18 漏洞 100% 修補 / 緩解（CVSS v3.1）</text>
 
         <!-- ── Row gap 40px: y=265 to y=305 — labels live here ── -->
@@ -245,11 +245,11 @@
         <rect x="14" y="323" width="390" height="10" fill="rgba(196,98,42,0.2)"/>
         <text x="209" y="322" text-anchor="middle" font-size="14" font-weight="bold" fill="#c4622a">C — 任務管理與系統狀態</text>
         <text x="26" y="345" font-size="12" fill="#ddd8cc">mission_manager  ·  system_status  ·  sensor_hub</text>
-        <text x="26" y="362" font-size="11" fill="#807a6e">任務狀態機：巡邏 → 停止（警報）→ 恢復（30s）→ 巡邏</text>
-        <text x="26" y="379" font-size="11" fill="#807a6e">感測器融合：LiDAR + Odom，發布系統健康度</text>
-        <text x="26" y="396" font-size="11" fill="#807a6e">接收 /security/alerts (RELIABLE · TRANSIENT_LOCAL)</text>
-        <text x="26" y="413" font-size="11" fill="#807a6e">異常警報後 30s 自動恢復巡邏</text>
-        <text x="26" y="430" font-size="10" fill="#807a6e">發布 /system/status @1Hz</text>
+        <text x="26" y="362" font-size="11" fill="#807a6e">任務狀態機：巡邏 → 停止（警報）→ 恢復（30s 固定不 reset）→ 巡邏</text>
+        <text x="26" y="379" font-size="11" fill="#807a6e">感測器融合：LiDAR + IMU，channel binding 簽章發送</text>
+        <text x="26" y="396" font-size="11" fill="#807a6e">接收 /security/alerts (RELIABLE · VOLATILE · max_age=3s)</text>
+        <text x="26" y="413" font-size="11" fill="#807a6e">90s 內 ≥2 pause → 120s quiet window 升級到外部介入</text>
+        <text x="26" y="430" font-size="10" fill="#807a6e">發布 /system/health @1Hz (CH_HEALTH 簽章)</text>
 
         <!-- ── Module D ── -->
         <rect x="516" y="305" width="390" height="133" rx="9" fill="rgba(204,76,76,0.07)" stroke="#cc4c4c" stroke-width="2"/>
@@ -330,20 +330,20 @@
             <text x="394" y="161" font-size="12" font-weight="600" fill="#d4930a">dist, angle</text>
             <!-- A2: y=176 h=100 bot=276 -->
             <rect x="10" y="176" width="740" height="100" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
-            <text x="28" y="198" font-size="14" font-weight="bold" fill="#f0b52a">A2 — ObservationBuilder  →  state [25]</text>
-            <text x="28" y="216" font-size="12" fill="#ddd8cc">LiDAR 360 點 → 20 bins（每 bin 取最小值）·  inf → 7.0  ·  clip [0.0, 7.0]</text>
-            <text x="28" y="233" font-size="12" fill="#ddd8cc">concat：bins[0..19] + [dist] + [cos(angle), sin(angle)] + [prev_lin, prev_ang] = 25D</text>
-            <text x="28" y="250" font-size="11" fill="#807a6e">cos/sin 編碼解決角度週期性問題（0° 和 360° 不連續，cos/sin 連續）</text>
-            <text x="28" y="267" font-size="11" fill="#807a6e">prev_vel 讓模型感知慣性，避免過激轉向；輸入來源 /scan + /odom</text>
+            <text x="28" y="198" font-size="14" font-weight="bold" fill="#f0b52a">A2 — ObservationBuilder  →  state [744] = (180 + 6) × K=4</text>
+            <text x="28" y="216" font-size="12" fill="#ddd8cc">LiDAR 180 raw beams（不池化，保留 spatial 資訊）·  clip [0.0, 3.5m]（Burger 上限）</text>
+            <text x="28" y="233" font-size="12" fill="#ddd8cc">6 state = [dist, cos(θ), sin(θ), prev_lin_vel, prev_ang_vel, curriculum_stage]</text>
+            <text x="28" y="250" font-size="11" fill="#807a6e">Frame stack K=4：連續 4 幀疊起來，agent 看「短影片」而非單張照片，能感知動態</text>
+            <text x="28" y="267" font-size="11" fill="#807a6e">cos/sin 角度編碼解決週期不連續；輸入來源 /scan (HMAC 簽章驗章) + /odom</text>
             <line x1="380" y1="276" x2="380" y2="306" stroke="#d4930a" stroke-width="2.5"/>
             <polygon points="373,306 387,306 380,316" fill="#d4930a"/>
-            <text x="394" y="301" font-size="12" font-weight="600" fill="#d4930a">obs[25]</text>
+            <text x="394" y="301" font-size="12" font-weight="600" fill="#d4930a">obs[744]</text>
             <!-- A3: y=316 h=95 bot=411 -->
             <rect x="10" y="316" width="740" height="95" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
             <text x="28" y="338" font-size="14" font-weight="bold" fill="#f0b52a">A3 — TQCPolicy  ·  1D-Conv encoder  [744 → 256 → 256 → 2]</text>
             <text x="28" y="356" font-size="12" fill="#ddd8cc">sb3-contrib TQC（top_quantiles_drop=2）·  Eval 時 deterministic + Bootstrap 95% CI</text>
-            <text x="28" y="373" font-size="11" fill="#807a6e">訓練：buffer 1M · batch 256 · LR 3e-4 · γ=0.99 · τ=0.005 · ent_coef=auto · 目標 3M steps</text>
-            <text x="28" y="390" font-size="11" fill="#807a6e">Reward = lin_vel − |ang_vel|/2 − max(0,1.35−min_range)/2  ·  Goal +100  ·  Collision −100</text>
+            <text x="28" y="373" font-size="11" fill="#807a6e">訓練：buffer 1M · batch 256 · LR 3e-4 · γ=0.99 · τ=0.005 · ent_coef=auto · 目標 2M steps</text>
+            <text x="28" y="390" font-size="11" fill="#807a6e">Reward = γ·Φ(s') − Φ(s) + smooth + sparse (Ng-Harada-Russell 1999) · Goal +100 · Collision −100</text>
             <text x="28" y="403" font-size="10" fill="#807a6e">GPU RTX 5070 Laptop · CUDA · PyTorch</text>
             <line x1="380" y1="411" x2="380" y2="441" stroke="#d4930a" stroke-width="2.5"/>
             <polygon points="373,441 387,441 380,451" fill="#d4930a"/>
@@ -351,7 +351,7 @@
             <!-- A4: y=451 h=95 bot=546 -->
             <rect x="10" y="451" width="740" height="95" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
             <text x="28" y="473" font-size="14" font-weight="bold" fill="#f0b52a">A4 — CommandPublisher  →  /cmd_vel  @  10 Hz</text>
-            <text x="28" y="491" font-size="12" fill="#ddd8cc">lin_vel = (action[0]+1)/2 × 0.25 m/s  （永遠前進，範圍 [0, 0.25]，不倒退）</text>
+            <text x="28" y="491" font-size="12" fill="#ddd8cc">lin_vel = (action[0]+1)/2 × 0.22 m/s  （永遠前進，範圍 [0, 0.22]，符合 Burger 物理上限）</text>
             <text x="28" y="508" font-size="12" fill="#ddd8cc">ang_vel = action[1] × 1.5 rad/s         （左負右正，範圍 [−1.5, 1.5]）</text>
             <text x="28" y="525" font-size="11" fill="#807a6e">發布 TwistStamped，frame_id=base_link  ·  float() 強制轉型防 numpy scalar 錯誤</text>
             <text x="28" y="538" font-size="11" fill="#cc4c4c">收到 /security/alerts → 強制 v=0, ω=0  ·  B5 EmergencyStop 優先覆蓋此輸出</text>
@@ -366,19 +366,19 @@
           <svg viewBox="0 0 760 545" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:'Segoe UI','PingFang TC',sans-serif;">
             <!-- B1: y=10 h=88 bot=98 -->
             <rect x="10" y="10" width="740" height="88" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
-            <text x="28" y="32" font-size="14" font-weight="bold" fill="#2ea874">B1 — WhitelistManager  ·  9 個合法節點</text>
-            <text x="28" y="50" font-size="12" fill="#ddd8cc">patrol_node · monitor_node · sensor_hub_node · mission_manager_node · system_status_node</text>
-            <text x="28" y="67" font-size="11" fill="#807a6e">robot_state_publisher · ros_gz_bridge · gz_sim_* · transform_listener_*</text>
-            <text x="28" y="83" font-size="11" fill="#807a6e">儲存於記憶體 Set，支援動態增減</text>
+            <text x="28" y="32" font-size="14" font-weight="bold" fill="#2ea874">B1 — WhitelistManager + Baseline Snapshot</text>
+            <text x="28" y="50" font-size="12" fill="#ddd8cc">patrol_node · monitor_node · sensor_hub_node · mission_manager_node · system_status_node · intelligent_defense_node</text>
+            <text x="28" y="67" font-size="11" fill="#807a6e">+ robot_state_publisher · ros_gz_bridge · _ros2cli_daemon_*  → 11 個白名單模組</text>
+            <text x="28" y="83" font-size="11" fill="#807a6e">ParameterDescriptor(read_only=True) 防 N14 hijack · 開機 15s grace period 內只吸收白名單</text>
             <line x1="380" y1="98" x2="380" y2="128" stroke="#2ea874" stroke-width="2.5"/>
             <polygon points="373,128 387,128 380,138" fill="#2ea874"/>
             <text x="394" y="123" font-size="12" font-weight="600" fill="#2ea874">whitelist</text>
             <!-- B2: y=138 h=88 bot=226 -->
             <rect x="10" y="138" width="740" height="88" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
-            <text x="28" y="160" font-size="14" font-weight="bold" fill="#2ea874">B2 — NodeScanner  ·  get_node_names()  @  1 Hz</text>
+            <text x="28" y="160" font-size="14" font-weight="bold" fill="#2ea874">B2 — NodeScanner  ·  get_node_names()  @  每 5 秒</text>
             <text x="28" y="178" font-size="12" fill="#ddd8cc">輪詢 ROS2 Graph API，取得目前所有節點全路徑（/namespace/node_name）</text>
-            <text x="28" y="195" font-size="11" fill="#807a6e">新出現的節點（不在快取）→ 傳給 B3  ·  節點離線 → 自動從追蹤移除</text>
-            <text x="28" y="211" font-size="11" fill="#807a6e">Domain 30 內所有 DDS 參與者均須持有 SROS2 X.509 憑證才能加入</text>
+            <text x="28" y="195" font-size="11" fill="#807a6e">新出現的節點（不在 baseline）→ 傳給 B3 · 持續 publish /security/heartbeat 給 IDS D5</text>
+            <text x="28" y="211" font-size="11" fill="#807a6e">SROS2 Permissive 模式運行；Enforce migration 列入 90 天計畫</text>
             <line x1="380" y1="226" x2="380" y2="256" stroke="#2ea874" stroke-width="2.5"/>
             <polygon points="373,256 387,256 380,266" fill="#2ea874"/>
             <text x="394" y="251" font-size="12" font-weight="600" fill="#2ea874">未知節點路徑</text>
@@ -403,22 +403,22 @@
             <!-- B4/B5/B6: y=435 -->
             <rect x="10" y="435" width="238" height="100" rx="7" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
             <text x="129" y="457" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">B4 — AlertPublisher</text>
-            <text x="129" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">/security/alerts</text>
-            <text x="129" y="492" text-anchor="middle" font-size="11" fill="#807a6e">RELIABLE + TRANSIENT_LOCAL</text>
-            <text x="129" y="509" text-anchor="middle" font-size="11" fill="#807a6e">JSON：節點名 + 時間 + 原因</text>
-            <text x="129" y="526" text-anchor="middle" font-size="10" fill="#807a6e">→ patrol + mission_manager</text>
+            <text x="129" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">/security/alerts (CH_ALERTS)</text>
+            <text x="129" y="492" text-anchor="middle" font-size="11" fill="#807a6e">RELIABLE · VOLATILE · max_age 3s</text>
+            <text x="129" y="509" text-anchor="middle" font-size="11" fill="#807a6e">envelope v3 + nonce + ts</text>
+            <text x="129" y="526" text-anchor="middle" font-size="10" fill="#807a6e">→ patrol / burger_env / mission</text>
             <rect x="258" y="435" width="244" height="100" rx="7" fill="rgba(204,76,76,0.12)" stroke="#cc4c4c" stroke-width="2"/>
             <text x="380" y="457" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">B5 — EmergencyStop ⚡</text>
-            <text x="380" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">強制發布 /cmd_vel v=0, ω=0</text>
-            <text x="380" y="492" text-anchor="middle" font-size="11" fill="#807a6e">持續 3 秒壓制 A4 輸出</text>
-            <text x="380" y="509" text-anchor="middle" font-size="11" fill="#cc4c4c">優先級高於 SmartPatrolNode</text>
-            <text x="380" y="526" text-anchor="middle" font-size="11" fill="#807a6e">3s 後恢復 RL 控制</text>
+            <text x="380" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">各下游驗章後自停 v=0, ω=0</text>
+            <text x="380" y="492" text-anchor="middle" font-size="11" fill="#807a6e">resume timer 30s 固定 不 reset</text>
+            <text x="380" y="509" text-anchor="middle" font-size="11" fill="#cc4c4c">90s 內 ≥2 pause → quiet 120s</text>
+            <text x="380" y="526" text-anchor="middle" font-size="11" fill="#807a6e">升級到人工介入（cascade 斷路器）</text>
             <rect x="512" y="435" width="238" height="100" rx="7" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
             <text x="631" y="457" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">B6 — EventLogger</text>
-            <text x="631" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">時間戳 + 節點名 + 命名空間</text>
-            <text x="631" y="492" text-anchor="middle" font-size="11" fill="#807a6e">嚴重程度分級</text>
-            <text x="631" y="509" text-anchor="middle" font-size="11" fill="#807a6e">ROS2 Logger 標準輸出</text>
-            <text x="631" y="526" text-anchor="middle" font-size="10" fill="#807a6e">可接 rosbag 錄製</text>
+            <text x="631" y="475" text-anchor="middle" font-size="12" fill="#ddd8cc">throttle 5s 防 log storm</text>
+            <text x="631" y="492" text-anchor="middle" font-size="11" fill="#807a6e">LINE 30s batch 聚合通知</text>
+            <text x="631" y="509" text-anchor="middle" font-size="11" fill="#807a6e">_alerted_nodes: OrderedDict + LRU 2048 + TTL 10min</text>
+            <text x="631" y="526" text-anchor="middle" font-size="10" fill="#807a6e">防 N18 OOM · 防 N17 推播洪水</text>
           </svg>
         </div>
       </div>
