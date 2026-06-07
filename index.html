@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>工廠安全巡邏機器人 — ROS2 DDS Security + SAC 深度強化學習</title>
+  <title>工廠安全巡邏機器人 — ROS2 DDS Security + TQC 深度強化學習</title>
   <style>
     :root {
       --bg:       #111110;
@@ -155,17 +155,18 @@
 <section class="hero">
   <div class="hero-tag">2026 · 專題</div>
   <h1>工廠安全巡邏機器人<br/><em>讓機器人自己找路，也自己守門</em></h1>
-  <p class="hero-en">ROS2 DDS Encrypted Communication × SAC Deep Reinforcement Learning Navigation</p>
+  <p class="hero-en">ROS2 DDS Security × TQC Deep RL Navigation × Red-Team Hardened</p>
   <p class="hero-desc">
-    這份專題把兩件事合在一起做：一是讓 TurtleBot3 Burger 用<strong>深度強化學習（SAC）</strong>學會在工廠場景中自主避障巡邏；
-    二是在 ROS2 通訊層加上<strong>DDS 加密憑證</strong>，再用<strong> LLM 自動找漏洞</strong>驗證防護效果。
+    這份專題把三件事合在一起做：一是讓 TurtleBot3 Burger 用 <strong>TQC（Truncated Quantile Critics，SAC 後繼者）</strong>
+    在工廠場景中自主避障巡邏；二是在 ROS2 通訊層加上 <strong>HMAC envelope v3 簽章鏈 + 行為 IDS</strong>；
+    三是用 <strong>紅隊 PoC N1–N24</strong> 驗證防護，並依 <strong>CVSS v3.1 + IEC 62443</strong> 量化評估。
   </p>
   <div class="nums">
-    <div class="num"><div class="num-val">4</div><div class="num-lbl">核心模組</div></div>
-    <div class="num"><div class="num-val">25D</div><div class="num-lbl">論文觀測空間</div></div>
-    <div class="num"><div class="num-val">3 M</div><div class="num-lbl">SAC 訓練步數目標</div></div>
-    <div class="num"><div class="num-val">31</div><div class="num-lbl">LLM 發現漏洞</div></div>
-    <div class="num"><div class="num-val">0.2s</div><div class="num-lbl">巡邏點更新延遲</div></div>
+    <div class="num"><div class="num-val">11</div><div class="num-lbl">ROS2 軟體模組</div></div>
+    <div class="num"><div class="num-val">744D</div><div class="num-lbl">TQC 觀測空間</div></div>
+    <div class="num"><div class="num-val">2 M</div><div class="num-lbl">TQC 訓練步數目標</div></div>
+    <div class="num"><div class="num-val">18 / 18</div><div class="num-lbl">漏洞修補完成</div></div>
+    <div class="num"><div class="num-val">24 / 24</div><div class="num-lbl">pytest 全綠</div></div>
   </div>
 </section>
 
@@ -174,7 +175,7 @@
   <div class="w">
     <p class="tag">System Architecture</p>
     <h2>系統架構圖</h2>
-    <p class="lead">四個模組各司其職：A 負責導航、B 負責資安偵測、C 協調任務、D 測試 B 的漏洞。</p>
+    <p class="lead">四個模組各司其職：A 負責 TQC 導航、B 負責 HMAC 簽章與節點偵測、C 協調任務與健康聚合、D 用紅隊 PoC + 行為 IDS 驗證 B 並擔當最後一道防線。</p>
     <div class="rule"></div>
 
     <!-- LEVEL 1 -->
@@ -197,15 +198,15 @@
 
         <!-- Gazebo -->
         <rect x="14" y="20" width="255" height="63" rx="7" fill="#1e1e1c" stroke="#d4930a" stroke-width="1.5"/>
-        <text x="141" y="43" text-anchor="middle" font-size="15" font-weight="bold" fill="#f0b52a">Gazebo Harmonic</text>
+        <text x="141" y="43" text-anchor="middle" font-size="15" font-weight="bold" fill="#f0b52a">Gazebo Garden</text>
         <text x="141" y="60" text-anchor="middle" font-size="12" fill="#807a6e">TurtleBot3 Burger  /scan  /odom</text>
         <text x="141" y="76" text-anchor="middle" font-size="11" fill="#807a6e">360° LiDAR · IMU · 物理引擎仿真</text>
 
-        <!-- OpenAI -->
+        <!-- 紅隊 / Lab tooling -->
         <rect x="660" y="20" width="252" height="63" rx="7" fill="#1e1e1c" stroke="#d4930a" stroke-width="1.5"/>
-        <text x="786" y="43" text-anchor="middle" font-size="15" font-weight="bold" fill="#f0b52a">OpenAI API</text>
-        <text x="786" y="60" text-anchor="middle" font-size="12" fill="#807a6e">GPT-4o-mini → MutationAgent</text>
-        <text x="786" y="76" text-anchor="middle" font-size="11" fill="#807a6e">GPT-4o → TriageAgent</text>
+        <text x="786" y="43" text-anchor="middle" font-size="15" font-weight="bold" fill="#f0b52a">Red-Team Lab</text>
+        <text x="786" y="60" text-anchor="middle" font-size="12" fill="#807a6e">N1–N24 PoC · pytest · CVSS v3.1</text>
+        <text x="786" y="76" text-anchor="middle" font-size="11" fill="#807a6e">IEC 62443-3-3 / NIST CSF v2.0</text>
 
         <!-- System boundary -->
         <rect x="3" y="96" width="914" height="354" rx="8" fill="none" stroke="#353530" stroke-width="1.8" stroke-dasharray="9,5"/>
@@ -215,10 +216,10 @@
         <rect x="14" y="117" width="390" height="148" rx="9" fill="rgba(212,147,10,0.07)" stroke="#d4930a" stroke-width="2"/>
         <rect x="14" y="117" width="390" height="28" rx="9" fill="rgba(212,147,10,0.22)"/>
         <rect x="14" y="135" width="390" height="10" fill="rgba(212,147,10,0.22)"/>
-        <text x="209" y="134" text-anchor="middle" font-size="14" font-weight="bold" fill="#f0b52a">A — SAC 智慧巡航</text>
+        <text x="209" y="134" text-anchor="middle" font-size="14" font-weight="bold" fill="#f0b52a">A — TQC 智慧巡航</text>
         <text x="26" y="155" font-size="12" fill="#ddd8cc">SmartPatrolNode  ·  patrol_node.py</text>
         <text x="26" y="172" font-size="11" fill="#807a6e">A1 WaypointManager → A2 ObservationBuilder (25D)</text>
-        <text x="26" y="189" font-size="11" fill="#807a6e">A3 SACPolicy [512→512] → A4 CommandPublisher</text>
+        <text x="26" y="189" font-size="11" fill="#807a6e">A3 TQCPolicy [256→256] + 1D-Conv → A4 CommandPublisher</text>
         <text x="26" y="206" font-size="11" fill="#807a6e">輸出 /cmd_vel @10Hz · lin [0,0.25m/s] · ang [±1.5rad/s]</text>
         <text x="26" y="223" font-size="11" fill="#807a6e">巡邏 5 個工廠點，到達門檻 0.30m，動態巡邏點更新</text>
         <text x="26" y="240" font-size="11" fill="#d4930a">訓練：3M steps · buffer 1M · net[512,512] · 論文對齊</text>
@@ -234,7 +235,7 @@
         <text x="528" y="189" font-size="11" fill="#807a6e">B3 AnomalyDetector → B4 AlertPublisher</text>
         <text x="528" y="206" font-size="11" fill="#807a6e">B5 EmergencyStop (覆蓋 /cmd_vel) · B6 EventLogger</text>
         <text x="528" y="223" font-size="11" fill="#807a6e">SROS2 X.509 憑證 · AES-GCM 加密 · Domain 30</text>
-        <text x="528" y="240" font-size="11" fill="#cc4c4c">⚠ 31 筆白名單繞過漏洞（待修補）</text>
+        <text x="528" y="240" font-size="11" fill="#2ea874">✓ 18 漏洞 100% 修補 / 緩解（CVSS v3.1）</text>
 
         <!-- ── Row gap 40px: y=265 to y=305 — labels live here ── -->
 
@@ -254,13 +255,13 @@
         <rect x="516" y="305" width="390" height="133" rx="9" fill="rgba(204,76,76,0.07)" stroke="#cc4c4c" stroke-width="2"/>
         <rect x="516" y="305" width="390" height="28" rx="9" fill="rgba(204,76,76,0.18)"/>
         <rect x="516" y="323" width="390" height="10" fill="rgba(204,76,76,0.18)"/>
-        <text x="711" y="322" text-anchor="middle" font-size="14" font-weight="bold" fill="#cc4c4c">D — LLM 智慧偵錯（離線）</text>
-        <text x="528" y="345" font-size="12" fill="#ddd8cc">MutationAgent → Queue(32) → SandboxExecutor → TriageAgent</text>
-        <text x="528" y="362" font-size="11" fill="#807a6e">以 LLM 自動生成攻擊測資，對 Module B 做系統性測試</text>
-        <text x="528" y="379" font-size="11" fill="#807a6e">Docker 隔離靶機，exit 2 = BYPASS FOUND</text>
-        <text x="528" y="396" font-size="11" fill="#cc4c4c">結果：31 筆 BYPASS（27× Namespace + 4× 前綴略過）</text>
-        <text x="528" y="413" font-size="11" fill="#807a6e">GPT-4o 分析繞過原因，輸出中文修補建議</text>
-        <text x="528" y="430" font-size="10" fill="#807a6e">SQLite 去重持久化，支援斷點續傳</text>
+        <text x="711" y="322" text-anchor="middle" font-size="14" font-weight="bold" fill="#cc4c4c">D — 紅隊 PoC + 行為 IDS</text>
+        <text x="528" y="345" font-size="12" fill="#ddd8cc">N1–N24 PoC + intelligent_defense_node (D1–D6)</text>
+        <text x="528" y="362" font-size="11" fill="#807a6e">每個攻擊獨立可執行檔；對 Module B 做端到端驗證</text>
+        <text x="528" y="379" font-size="11" fill="#807a6e">D1 物理 / D3 scan std / D4 unauth pub / D6 cmd-vs-odom</text>
+        <text x="528" y="396" font-size="11" fill="#2ea874">結果：18 漏洞 100% 擋下 / 緩解；pytest 24/24 全綠</text>
+        <text x="528" y="413" font-size="11" fill="#807a6e">CVSS v3.1 + IEC 62443-3-3 + NIST CSF v2.0 對齊</text>
+        <text x="528" y="430" font-size="10" fill="#807a6e">cascade-DoS 偵測 → quiet window 升級到外部介入</text>
 
         <!-- ════ ARROWS — explicit polygons, tip stops 3px BEFORE box border ════ -->
 
@@ -294,7 +295,7 @@
         <path d="M780,305 L780,285 L912,285 L912,150" stroke="#cc4c4c" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
         <line x1="912" y1="150" x2="909" y2="150" stroke="#cc4c4c" stroke-width="1.5"/>
         <polygon points="909,143 909,157 902,150" fill="#cc4c4c"/>
-        <text x="870" y="283" text-anchor="end" font-size="10" fill="#cc4c4c">D 驗證 B 漏洞</text>
+        <text x="870" y="283" text-anchor="end" font-size="10" fill="#cc4c4c">D 紅隊驗證 B</text>
       </svg>
     </div>
 
@@ -308,7 +309,7 @@
 
       <!-- L2A -->
       <div class="l2-block">
-        <div class="l2-label l2-a">MODULE A — SAC 智慧巡航 · SmartPatrolNode</div>
+        <div class="l2-label l2-a">MODULE A — TQC 智慧巡航 · patrol_node / burger_sac_env</div>
         <div class="arch-wrap">
           <svg viewBox="0 0 760 555" xmlns="http://www.w3.org/2000/svg" style="width:100%;font-family:'Segoe UI','PingFang TC',sans-serif;">
             <text x="90" y="14" text-anchor="middle" font-size="11" fill="#807a6e">/scan (360pts)</text>
@@ -339,8 +340,8 @@
             <text x="394" y="301" font-size="12" font-weight="600" fill="#d4930a">obs[25]</text>
             <!-- A3: y=316 h=95 bot=411 -->
             <rect x="10" y="316" width="740" height="95" rx="8" fill="rgba(212,147,10,0.1)" stroke="#d4930a" stroke-width="1.5"/>
-            <text x="28" y="338" font-size="14" font-weight="bold" fill="#f0b52a">A3 — SACPolicy  ·  Actor Net  [25 → 512 → 512 → 2]</text>
-            <text x="28" y="356" font-size="12" fill="#ddd8cc">Stable Baselines3 SAC  ·  推論時 deterministic=True（不加探索雜訊）</text>
+            <text x="28" y="338" font-size="14" font-weight="bold" fill="#f0b52a">A3 — TQCPolicy  ·  1D-Conv encoder  [744 → 256 → 256 → 2]</text>
+            <text x="28" y="356" font-size="12" fill="#ddd8cc">sb3-contrib TQC（top_quantiles_drop=2）·  Eval 時 deterministic + Bootstrap 95% CI</text>
             <text x="28" y="373" font-size="11" fill="#807a6e">訓練：buffer 1M · batch 256 · LR 3e-4 · γ=0.99 · τ=0.005 · ent_coef=auto · 目標 3M steps</text>
             <text x="28" y="390" font-size="11" fill="#807a6e">Reward = lin_vel − |ang_vel|/2 − max(0,1.35−min_range)/2  ·  Goal +100  ·  Collision −100</text>
             <text x="28" y="403" font-size="10" fill="#807a6e">GPU RTX 5070 Laptop · CUDA · PyTorch</text>
@@ -386,10 +387,10 @@
             <text x="28" y="288" font-size="14" font-weight="bold" fill="#2ea874">B3 — AnomalyDetector  ·  白名單比對</text>
             <text x="28" y="306" font-size="12" fill="#ddd8cc">short_name = full_path.rsplit('/', 1)[-1]   →   比對 B1 白名單</text>
             <rect x="18" y="312" width="724" height="19" rx="3" fill="rgba(204,76,76,0.18)"/>
-            <text x="28" y="325" font-size="12" fill="#cc4c4c">⚠ 漏洞：只比對短名 → /attacker/patrol_node 和 /patrol_node 視為相同，27 筆 BYPASS</text>
+            <text x="28" y="325" font-size="12" fill="#2ea874">✓ 已修：baseline 快照 + 15s grace period 只吸收白名單（namespace+name 一致）</text>
             <rect x="18" y="333" width="724" height="19" rx="3" fill="rgba(204,76,76,0.18)"/>
-            <text x="28" y="346" font-size="12" fill="#cc4c4c">⚠ 漏洞：startswith('_') / 'ros_gz' / 'dqn' / 'launch_ros' → 靜默略過，4 筆 BYPASS</text>
-            <text x="28" y="367" font-size="11" fill="#807a6e">發現異常 → 同時觸發 B4 + B5 + B6  ·  LLM Fuzzer（D）已驗證記錄 31 筆漏洞</text>
+            <text x="28" y="346" font-size="12" fill="#2ea874">✓ 已修：移除 prefix 白名單後門；非白名單一律 alert</text>
+            <text x="28" y="367" font-size="11" fill="#807a6e">發現異常 → /security/alerts (HMAC envelope v3)  ·  紅隊 N1–N24 已驗證 18 漏洞全擋</text>
             <!-- T-bar fan-out: stem, bar, 3 drops — all BELOW B3 bottom (y=378) -->
             <line x1="380" y1="378" x2="380" y2="398" stroke="#2ea874" stroke-width="2.5"/>
             <line x1="129" y1="398" x2="631" y2="398" stroke="#2ea874" stroke-width="2.5"/>
@@ -424,73 +425,73 @@
 
       <!-- L2D -->
       <div class="l2-block l2-full">
-        <div class="l2-label l2-d">MODULE D — LLM 智慧偵錯系統（離線驗證工具）</div>
+        <div class="l2-label l2-d">MODULE D — 紅隊 PoC + 行為 IDS（防線最末端）</div>
         <div class="arch-wrap">
           <svg viewBox="0 0 1100 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:700px;font-family:'Segoe UI','PingFang TC',sans-serif;">
-            <!-- D1 -->
+            <!-- D1 紅隊 PoC -->
             <rect x="10" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
-            <text x="102" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D1 — MutationAgent</text>
-            <text x="102" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">GPT-4o-mini</text>
-            <text x="102" y="73" text-anchor="middle" font-size="11" fill="#807a6e">生成攻擊 JSON 測資</text>
-            <text x="102" y="90" text-anchor="middle" font-size="10" fill="#807a6e">{"node_name":"...",</text>
-            <text x="102" y="106" text-anchor="middle" font-size="10" fill="#807a6e"> "namespace":"..."}</text>
-            <text x="102" y="127" text-anchor="middle" font-size="11" fill="#807a6e">策略：Namespace 欺騙</text>
-            <text x="102" y="144" text-anchor="middle" font-size="11" fill="#807a6e">策略：前綴靜默繞過</text>
-            <text x="102" y="161" text-anchor="middle" font-size="11" fill="#807a6e">策略：特殊字元混淆</text>
-            <text x="102" y="178" text-anchor="middle" font-size="11" fill="#807a6e">LLM 失敗 → 後備變異</text>
-            <text x="102" y="196" text-anchor="middle" font-size="10" fill="#807a6e">種子：patrol_node/attacker</text>
+            <text x="102" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D1 — 紅隊 PoC</text>
+            <text x="102" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">N1–N24 獨立可執行檔</text>
+            <text x="102" y="75" text-anchor="middle" font-size="11" fill="#807a6e">N1 heartbeat replay</text>
+            <text x="102" y="92" text-anchor="middle" font-size="11" fill="#807a6e">N4 cross-channel</text>
+            <text x="102" y="109" text-anchor="middle" font-size="11" fill="#807a6e">N13 confused-deputy</text>
+            <text x="102" y="126" text-anchor="middle" font-size="11" fill="#807a6e">N14 param hijack</text>
+            <text x="102" y="143" text-anchor="middle" font-size="11" fill="#807a6e">N21 cascade DoS</text>
+            <text x="102" y="166" text-anchor="middle" font-size="11" fill="#807a6e">pytest tests/security/</text>
+            <text x="102" y="183" text-anchor="middle" font-size="10" fill="#807a6e">無密鑰 · 同 DDS domain</text>
             <line x1="194" y1="110" x2="224" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
             <polygon points="224,103 224,117 234,110" fill="#cc4c4c"/>
-            <text x="214" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">JSON</text>
-            <!-- D2 -->
-            <rect x="234" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
-            <text x="326" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D2 — Queue</text>
-            <text x="326" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">asyncio.Queue(32)</text>
-            <text x="326" y="75" text-anchor="middle" font-size="11" fill="#807a6e">1 Producer</text>
-            <text x="326" y="92" text-anchor="middle" font-size="11" fill="#807a6e">4 Consumer</text>
-            <text x="326" y="115" text-anchor="middle" font-size="11" fill="#807a6e">Pipeline 解耦</text>
-            <text x="326" y="132" text-anchor="middle" font-size="11" fill="#807a6e">Producer /</text>
-            <text x="326" y="149" text-anchor="middle" font-size="11" fill="#807a6e">Consumer 非同步</text>
-            <text x="326" y="170" text-anchor="middle" font-size="11" fill="#807a6e">容量滿時背壓</text>
-            <line x1="418" y1="110" x2="448" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
-            <polygon points="448,103 448,117 458,110" fill="#cc4c4c"/>
-            <text x="438" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">×4</text>
-            <!-- D3 -->
-            <rect x="458" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
-            <text x="550" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D3 — SandboxExecutor</text>
-            <text x="550" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">Docker 隔離執行</text>
-            <text x="550" y="75" text-anchor="middle" font-size="11" fill="#807a6e">network=none</text>
-            <text x="550" y="92" text-anchor="middle" font-size="11" fill="#807a6e">mem_limit=256m</text>
-            <text x="550" y="115" text-anchor="middle" font-size="12" fill="#ddd8cc">靶機：target_monitor.py</text>
-            <text x="550" y="132" text-anchor="middle" font-size="11" fill="#807a6e">複製 B3 白名單邏輯</text>
-            <text x="550" y="155" text-anchor="middle" font-size="12" fill="#2ea874">exit 0 = BLOCKED ✓</text>
-            <text x="550" y="173" text-anchor="middle" font-size="12" fill="#cc4c4c">exit 2 = BYPASS ⚠</text>
+            <text x="214" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">攻擊</text>
+            <!-- D2 HMAC 驗章層 -->
+            <rect x="234" y="10" width="184" height="210" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="326" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">D2 — HMAC 驗章</text>
+            <text x="326" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">envelope v3 驗章</text>
+            <text x="326" y="75" text-anchor="middle" font-size="11" fill="#807a6e">verify_alert(expected_channel)</text>
+            <text x="326" y="92" text-anchor="middle" font-size="11" fill="#807a6e">ts &gt; now − 3s</text>
+            <text x="326" y="109" text-anchor="middle" font-size="11" fill="#807a6e">nonce ∉ ReplayCache</text>
+            <text x="326" y="126" text-anchor="middle" font-size="11" fill="#807a6e">channel = expected</text>
+            <text x="326" y="149" text-anchor="middle" font-size="12" fill="#2ea874">擋下：N1/N3/N4 替換重放</text>
+            <text x="326" y="166" text-anchor="middle" font-size="12" fill="#2ea874">擋下：N6/N7/N8 冒名</text>
+            <line x1="418" y1="110" x2="448" y2="110" stroke="#807a6e" stroke-width="2.5"/>
+            <polygon points="448,103 448,117 458,110" fill="#807a6e"/>
+            <text x="438" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#807a6e">未經簽章</text>
+            <!-- D3 行為 IDS D1-D6 -->
+            <rect x="458" y="10" width="184" height="210" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="550" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">D3 — 行為 IDS</text>
+            <text x="550" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">intelligent_defense_node</text>
+            <text x="550" y="75" text-anchor="middle" font-size="11" fill="#807a6e">D1 cmd_vel &gt; 0.23 m/s</text>
+            <text x="550" y="92" text-anchor="middle" font-size="11" fill="#807a6e">D3 scan std &lt; 0.01</text>
+            <text x="550" y="109" text-anchor="middle" font-size="11" fill="#807a6e">D4 unauthorized publisher</text>
+            <text x="550" y="126" text-anchor="middle" font-size="11" fill="#807a6e">D5 heartbeat watchdog 10s</text>
+            <text x="550" y="143" text-anchor="middle" font-size="11" fill="#807a6e">D6 cmd-vs-odom 矛盾</text>
+            <text x="550" y="166" text-anchor="middle" font-size="12" fill="#2ea874">擋下：cmd_vel / scan / odom</text>
+            <text x="550" y="183" text-anchor="middle" font-size="10" fill="#807a6e">投票 ≥2 fire（D4 可單獨）</text>
             <line x1="642" y1="110" x2="672" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
             <polygon points="672,103 672,117 682,110" fill="#cc4c4c"/>
-            <text x="662" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">BYPASS</text>
-            <!-- D4 -->
-            <rect x="682" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
-            <text x="774" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D4 — TriageAgent</text>
-            <text x="774" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">GPT-4o 分析</text>
-            <text x="774" y="75" text-anchor="middle" font-size="11" fill="#807a6e">繞過原因分類</text>
-            <text x="774" y="92" text-anchor="middle" font-size="11" fill="#807a6e">嚴重程度評級</text>
-            <text x="774" y="115" text-anchor="middle" font-size="12" fill="#cc4c4c">CRITICAL: Namespace</text>
-            <text x="774" y="132" text-anchor="middle" font-size="12" fill="#cc4c4c">HIGH: 前綴略過</text>
-            <text x="774" y="154" text-anchor="middle" font-size="11" fill="#807a6e">輸出中文修補建議</text>
-            <text x="774" y="171" text-anchor="middle" font-size="11" fill="#807a6e">→ B3 修補清單</text>
-            <line x1="866" y1="110" x2="896" y2="110" stroke="#cc4c4c" stroke-width="2.5"/>
-            <polygon points="896,103 896,117 906,110" fill="#cc4c4c"/>
-            <text x="886" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">儲存</text>
-            <!-- D5 -->
-            <rect x="906" y="10" width="184" height="210" rx="8" fill="rgba(204,76,76,0.1)" stroke="#cc4c4c" stroke-width="1.5"/>
-            <text x="998" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#cc4c4c">D5 — StateDB</text>
-            <text x="998" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">SQLite 持久化</text>
-            <text x="998" y="75" text-anchor="middle" font-size="11" fill="#807a6e">Hash 去重防重複</text>
-            <text x="998" y="92" text-anchor="middle" font-size="11" fill="#807a6e">崩潰報告庫</text>
-            <text x="998" y="115" text-anchor="middle" font-size="11" fill="#807a6e">Session 斷點續傳</text>
-            <text x="998" y="143" text-anchor="middle" font-size="16" font-weight="bold" fill="#cc4c4c">31 筆 BYPASS</text>
-            <text x="998" y="163" text-anchor="middle" font-size="12" fill="#807a6e">27× Namespace</text>
-            <text x="998" y="181" text-anchor="middle" font-size="12" fill="#807a6e">4× Prefix</text>
+            <text x="662" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#cc4c4c">cascade?</text>
+            <!-- D4 cascade DoS 偵測 -->
+            <rect x="682" y="10" width="184" height="210" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="774" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">D4 — Cascade 斷路器</text>
+            <text x="774" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">N21/N23 結構性緩解</text>
+            <text x="774" y="75" text-anchor="middle" font-size="11" fill="#807a6e">resume timer 不 reset</text>
+            <text x="774" y="92" text-anchor="middle" font-size="11" fill="#807a6e">首次 pause 30s 固定</text>
+            <text x="774" y="115" text-anchor="middle" font-size="11" fill="#807a6e">90s 內 ≥2 pause</text>
+            <text x="774" y="132" text-anchor="middle" font-size="11" fill="#807a6e">→ quiet window 120s</text>
+            <text x="774" y="155" text-anchor="middle" font-size="12" fill="#2ea874">升級到外部介入</text>
+            <text x="774" y="173" text-anchor="middle" font-size="11" fill="#807a6e">LINE 30s batch 通知</text>
+            <line x1="866" y1="110" x2="896" y2="110" stroke="#2ea874" stroke-width="2.5"/>
+            <polygon points="896,103 896,117 906,110" fill="#2ea874"/>
+            <text x="886" y="102" text-anchor="middle" font-size="9" font-weight="600" fill="#2ea874">結果</text>
+            <!-- D5 漏洞統計 -->
+            <rect x="906" y="10" width="184" height="210" rx="8" fill="rgba(46,168,116,0.1)" stroke="#2ea874" stroke-width="1.5"/>
+            <text x="998" y="34" text-anchor="middle" font-size="13" font-weight="bold" fill="#2ea874">D5 — 漏洞報告</text>
+            <text x="998" y="52" text-anchor="middle" font-size="12" fill="#ddd8cc">CVSS v3.1 + IEC 62443</text>
+            <text x="998" y="75" text-anchor="middle" font-size="11" fill="#cc4c4c">Critical × 4 (CVSS 9.1)</text>
+            <text x="998" y="92" text-anchor="middle" font-size="11" fill="#cc4c4c">High × 10 (7.1–8.7)</text>
+            <text x="998" y="109" text-anchor="middle" font-size="11" fill="#807a6e">Medium × 4 (4.3–6.5)</text>
+            <text x="998" y="143" text-anchor="middle" font-size="16" font-weight="bold" fill="#2ea874">18 / 18 修補</text>
+            <text x="998" y="163" text-anchor="middle" font-size="12" fill="#807a6e">pytest 24 / 24 全綠</text>
+            <text x="998" y="181" text-anchor="middle" font-size="12" fill="#807a6e">ALE 降幅 93.4%</text>
           </svg>
         </div>
       </div>
@@ -508,49 +509,52 @@
     <div class="rule"></div>
     <div class="mods">
       <div class="mod mod-a">
-        <div class="mod-label">Module A · SAC 巡航</div>
-        <h3>SmartPatrolNode</h3>
+        <div class="mod-label">Module A · TQC 巡航</div>
+        <h3>patrol_node / burger_sac_env</h3>
         <ul>
-          <li>SAC 演算法（Stable Baselines3），論文完整復現</li>
-          <li>觀測空間 25 維：20 個 LiDAR bin（每 bin 取最小值）+ 目標距離 + cos(θ) + sin(θ) + 前一步速度</li>
-          <li>cos/sin 編碼避免角度週期性問題（0° 和 360° 不連續）</li>
-          <li>動態巡邏點：/patrol/goto topic 即時重定向，/patrol/reload 整批更新</li>
-          <li>卡住偵測：3 秒未移動 → 倒退 2 秒 + 交替左右轉向</li>
-          <li>安全優先：收到 /security/alerts 立刻 v=0, ω=0</li>
+          <li>TQC（Truncated Quantile Critics，sb3-contrib）抑制 Q overestimation — SAC 後繼者</li>
+          <li>觀測空間 744 維 = (180 LiDAR beams + 6 state) × frame stack K=4</li>
+          <li>1D-Conv LiDAR encoder + LayerNorm，能學「局部 spatial pattern」（門框、走廊）</li>
+          <li>Reward = γΦ(s') − Φ(s)（Ng-Harada-Russell 1999 potential-based shaping）+ smooth + sparse</li>
+          <li>Curriculum 1→5 waypoints 自動升級；Domain Randomization + 5% 對抗訓練</li>
+          <li>動態巡邏點：/patrol/goto 帶 HMAC 簽章 + 座標 ±2.5m 範圍檢查</li>
+          <li>收到 /security/alerts 立刻 v=0, ω=0；resume timer 不 reset on alert，加 cascade quiet window</li>
         </ul>
       </div>
       <div class="mod mod-b">
         <div class="mod-label">Module B · 資安監控</div>
-        <h3>DDSSecurityMonitor</h3>
+        <h3>monitor_node + 簽章鏈</h3>
         <ul>
-          <li>SROS2：每個節點持有 X.509 憑證，沒有憑證無法加入 Domain 30</li>
-          <li>DDS 加密：AES-GCM 加密訊息內容，HMAC-SHA256 驗簽名</li>
-          <li>permissions.xml 最小權限原則：patrol_node 只能訂閱 /scan /odom，只能發布 /cmd_vel</li>
-          <li>NodeScanner 每秒輪詢 DDS 圖，對比合法節點白名單（9 個）</li>
-          <li>偵測到異常 → 發布 /security/alerts（RELIABLE + TRANSIENT_LOCAL）→ 停止機器人</li>
-          <li>已知漏洞：白名單只比對短名，命名空間欺騙可繞過（待修補）</li>
+          <li>HMAC envelope v3：<code>{body{channel, nonce, payload, ts}, sig}</code> — 防偽造 + 防重放 + 防跨頻道</li>
+          <li>接收端 ReplayCache（LRU + TTL eviction），訊息 max_age 3 秒拒絕過期</li>
+          <li>檔案簽章 <code>.sha256.hmac</code>：模型 / buffer load 前驗章，篡改 sys.exit(2) 拒絕</li>
+          <li>節點偵測：開機 baseline 快照 + 15s grace period 只吸收白名單，移除 prefix 後門</li>
+          <li>敏感參數 ParameterDescriptor(read_only=True)：whitelist / poll_interval 不可被改</li>
+          <li>LINE 推播 30s batch 聚合，防 alert 洪水洗版</li>
+          <li>SROS2 Permissive 模式運行中；Enforce migration 列入 90 天計畫</li>
         </ul>
       </div>
       <div class="mod mod-c">
         <div class="mod-label">Module C · 任務管理</div>
-        <h3>Mission & Status Nodes</h3>
+        <h3>Mission / Status / Sensor Hub</h3>
         <ul>
-          <li>mission_manager：訂閱警報，管理任務狀態機（巡邏 / 停止 / 恢復）</li>
-          <li>警報後自動等待 30 秒恢復，可設定</li>
-          <li>system_status_node：對外廣播節點健康度和任務進度</li>
-          <li>sensor_hub_node：LiDAR + Odom 資料融合與分發</li>
+          <li>mission_manager：訂閱警報，管理任務狀態機（巡邏 / 停止 / 恢復）；綁 channel=CH_MISSION</li>
+          <li>system_status：對外廣播健康度；self-watch 改為 log-only + rate-limit cooldown（避免 N13 confused-deputy）</li>
+          <li>sensor_hub：LiDAR + IMU 融合分發；綁 channel=CH_SENSOR 簽章發送</li>
+          <li>全部下游模組以 <code>verify_alert(expected_channel=...)</code> 驗章，cross-channel 攻擊被擋</li>
         </ul>
       </div>
       <div class="mod mod-d">
-        <div class="mod-label">Module D · LLM 模糊測試</div>
-        <h3>LLM Fuzzer</h3>
+        <div class="mod-label">Module D · 紅隊 + 行為 IDS</div>
+        <h3>intelligent_defense_node + 紅隊 PoC</h3>
         <ul>
-          <li>MutationAgent（GPT-4o-mini）：生成惡意節點名稱測資，策略涵蓋命名空間欺騙、前綴繞過</li>
-          <li>asyncio.Queue（容量 32）：1 Producer + 4 Consumer，Pipeline 解耦</li>
-          <li>Docker Sandbox：network=none，mem_limit=256m，隔離執行靶機</li>
-          <li>靶機 target_monitor.py：完整複製 B3 的白名單邏輯，exit 2 = BYPASS FOUND</li>
-          <li>TriageAgent（GPT-4o）：分析繞過原因，輸出嚴重程度與修補建議</li>
-          <li>SQLite StateDB：Hash 去重防重複，支援斷點續傳</li>
+          <li>D1 物理門檻（cmd_vel &gt; 0.23 m/s 視為攻擊；Burger 上限 0.22）</li>
+          <li>D2 方向衝突 / D3 scan 重複 / D4 unauthorized publisher（白名單 + 計數）</li>
+          <li>D5 heartbeat 看門狗（10s 超時告警）</li>
+          <li>D6 cmd-vs-odom-vs-scan 行為一致性偵測（odom 移動但 scan 靜止 = 矛盾 = 攻擊）</li>
+          <li>紅隊 PoC N1–N24 獨立可執行檔（heartbeat replay / channel confusion / pickle RCE / cascade DoS）</li>
+          <li>pytest tests/test_security.py — 24 個自動化測試全綠</li>
+          <li>偵測即攻擊面教訓：cascade DoS 偵測 → 90s 內 2 次 pause → quiet window 升級到外部介入</li>
         </ul>
       </div>
     </div>
@@ -560,43 +564,43 @@
 <!-- TRAINING -->
 <section id="training" style="background:var(--s1);">
   <div class="w">
-    <p class="tag">SAC Training · Paper Aligned</p>
-    <h2>SAC 訓練設計</h2>
-    <p class="lead">完整對齊論文 <em>reiniscimurs/DRL-Robot-Navigation-ROS2</em>，從觀測空間到超參數全部照搬。</p>
+    <p class="tag">TQC Training · Tier-1 設計</p>
+    <h2>TQC 訓練設計</h2>
+    <p class="lead">採 <em>Truncated Quantile Critics</em>（Kuznetsov et al. 2020，sb3-contrib 實作）— SAC 後繼者，估「分佈」而非「期望值」、捨最樂觀 quantile 抑制 Q overestimation。Reward 與 eval 統計全面對齊論文等級。</p>
     <div class="rule"></div>
 
     <div class="flow">
-      <div class="flow-step">Gazebo 隨機起點</div>
+      <div class="flow-step">Gazebo 隨機起點 + Domain Randomization</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">LiDAR 360 點 → 20 bins</div>
+      <div class="flow-step">LiDAR 180 beams + 6 state</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">concat 目標資訊 + prev_vel</div>
+      <div class="flow-step">Frame Stack K=4 → 744D</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">Actor [512 × 512]</div>
+      <div class="flow-step">1D-Conv encoder + LayerNorm</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">TQC Actor [256, 256]</div>
       <div class="flow-arrow">→</div>
       <div class="flow-step">action[v, ω]</div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step">Reward 計算</div>
-      <div class="flow-arrow">→</div>
-      <div class="flow-step">Replay Buffer 1M</div>
+      <div class="flow-step">Potential-based reward</div>
     </div>
 
     <div class="train-grid">
       <div class="code-box">
-        <div class="box-title">State Space · 25D</div>
-        <code>bins[0..19]  = min(LiDAR / bin)<br/>bins[20]     = dist_to_goal<br/>bins[21]     = cos(angle)<br/>bins[22]     = sin(angle)<br/>bins[23]     = prev_lin_vel<br/>bins[24]     = prev_ang_vel</code>
+        <div class="box-title">State Space · 744D</div>
+        <code>obs = stack(K=4) of:<br/>  beams[0..179]   = LiDAR raw (180 方向)<br/>  state[180..185] = [dist, cos, sin,<br/>                     prev_v, prev_ω,<br/>                     curriculum_stage]</code>
       </div>
       <div class="code-box">
-        <div class="box-title">Reward Function</div>
-        <code>goal reached  → +100<br/>collision     → −100<br/><br/>else:<br/>  r = v<br/>    − |ω| / 2<br/>    − max(0, 1.35 − d) / 2</code>
+        <div class="box-title">Reward (Ng-Harada-Russell 1999)</div>
+        <code>goal reached    → +100<br/>collision       → −100<br/><br/>else (potential-based):<br/>  r = γ·Φ(s') − Φ(s)<br/>     + smooth penalty<br/>     + sparse waypoint bonus</code>
       </div>
       <div class="code-box">
-        <div class="box-title">SAC Hyperparameters</div>
-        <code>net_arch      = [512, 512]<br/>buffer_size   = 1_000_000<br/>batch_size    = 256<br/>learning_rate = 3e-4<br/>gamma         = 0.99<br/>tau           = 0.005<br/>ent_coef      = "auto"<br/>total_steps   = 3_000_000</code>
+        <div class="box-title">TQC Hyperparameters</div>
+        <code>top_quantiles_drop = 2 per net<br/>n_critics     = 5  · n_quantiles = 25<br/>net_arch      = [256, 256]<br/>buffer_size   = 1_000_000<br/>batch_size    = 256<br/>learning_rate = 3e-4<br/>gamma         = 0.99 · tau = 0.005<br/>total_steps   = 2_000_000</code>
       </div>
       <div class="code-box">
-        <div class="box-title">Action Space</div>
-        <code>action[0] ∈ [−1, 1]<br/>  → lin = (a+1)/2 × 0.25 m/s<br/>     (永遠前進，不倒退)<br/><br/>action[1] ∈ [−1, 1]<br/>  → ang = a × 1.5 rad/s<br/>     (左右轉向)</code>
+        <div class="box-title">Robustness + Eval</div>
+        <code>Curriculum    = 1→5 waypoints (auto)<br/>DR            = lidar noise / vel jitter<br/>Adversarial   = 5% episodes<br/>Best-by-SPL   = top-stage only<br/>Eval (deterministic, n=50):<br/>  SPL + 95% CI (Bootstrap B=1000)</code>
       </div>
     </div>
   </div>
@@ -605,42 +609,47 @@
 <!-- SECURITY FINDINGS -->
 <section id="security">
   <div class="w">
-    <p class="tag">Security Findings · LLM Fuzzer</p>
+    <p class="tag">Security Findings · 紅隊 N1–N24 + CVSS v3.1</p>
     <h2>資安測試結果</h2>
-    <p class="lead">用 LLM 模糊測試對 Module B 白名單邏輯進行系統性測試，共發現 31 筆繞過漏洞。</p>
+    <p class="lead">用 24 個獨立紅隊 PoC 攻擊本系統，每個漏洞依 CVSS v3.1 評分、對齊 IEC 62443-3-3 與 NIST CSF v2.0。所有漏洞已修補或結構性緩解。</p>
     <div class="rule"></div>
     <div class="sec-grid">
       <div class="vuln-card">
-        <div class="vuln-num">27</div>
-        <div class="vuln-name">WHITELIST_NAME_MATCH — CRITICAL</div>
+        <div class="vuln-num">4</div>
+        <div class="vuln-name">CRITICAL · CVSS 9.1</div>
         <div class="vuln-desc">
-          白名單比對只看節點短名（<code style="color:#cc4c4c;font-size:.8rem;">rsplit('/', 1)[-1]</code>），
-          攻擊者在任意命名空間下使用合法名稱（如 <code style="color:#cc4c4c;font-size:.8rem;">/attacker/patrol_node</code>）即可通過白名單，完全偽裝成合法節點。
+          <code style="color:#cc4c4c;font-size:.8rem;">/security/alerts</code> 偽造、<code style="color:#cc4c4c;font-size:.8rem;">/security/heartbeat</code> 重放、
+          <code style="color:#cc4c4c;font-size:.8rem;">/system/health</code> confused-deputy、<code style="color:#cc4c4c;font-size:.8rem;">/set_parameters</code> whitelist hijack。
+          <strong style="color:#2ea874">已全部修補</strong>（HMAC envelope v3 + read-only param + self-watch log-only）。
+        </div>
+      </div>
+      <div class="vuln-card">
+        <div class="vuln-num">10</div>
+        <div class="vuln-name">HIGH · CVSS 7.1–8.7</div>
+        <div class="vuln-desc">
+          Pickle RCE、模型權重覆寫、<code style="color:#cc4c4c;font-size:.8rem;">/cmd_vel</code> hijack、<code style="color:#cc4c4c;font-size:.8rem;">/scan</code> 感測污染、
+          <code style="color:#cc4c4c;font-size:.8rem;">/patrol/goto</code> 路徑劫持、sensor/mission 冒名、cascade DoS、odom 位置劫持。
+          <strong style="color:#2ea874">9 個完封 + 1 個結構性緩解</strong>。
         </div>
       </div>
       <div class="vuln-card">
         <div class="vuln-num">4</div>
-        <div class="vuln-name">UNDERSCORE_PREFIX — HIGH</div>
+        <div class="vuln-name">MEDIUM · CVSS 4.3–6.5</div>
         <div class="vuln-desc">
-          節點名以 <code style="color:#cc4c4c;font-size:.8rem;">_</code> 開頭時，偵測邏輯直接 <code style="color:#cc4c4c;font-size:.8rem;">continue</code> 跳過，不進入白名單比對。
-          攻擊者只需在節點名前加底線，即可完全隱身。
-        </div>
-      </div>
-      <div class="vuln-card">
-        <div class="vuln-num">3 × 1</div>
-        <div class="vuln-name">PREFIX BYPASS — HIGH</div>
-        <div class="vuln-desc">
-          <code style="color:#cc4c4c;font-size:.8rem;">ros_gz</code>、<code style="color:#cc4c4c;font-size:.8rem;">dqn</code>、<code style="color:#cc4c4c;font-size:.8rem;">launch_ros</code> 開頭的節點同樣被靜默略過，
-          各前綴各發現 1 筆繞過。原意是略過內部工具節點，但沒有任何驗證機制。
+          <code style="color:#cc4c4c;font-size:.8rem;">/patrol/reload</code> service flood、<code style="color:#cc4c4c;font-size:.8rem;">/proc/env</code> 環境變數洩漏、
+          prefix 白名單繞過、LINE 推播洪水。
+          <strong style="color:#2ea874">全部修補</strong>（rate-limit + baseline+grace + 30s batch 聚合）。
         </div>
       </div>
     </div>
     <div class="fix-box">
-      <h4>修補方向（尚未實作）</h4>
+      <h4>修補成果（已實作 + 驗證）</h4>
       <p>
-        根本解法是<strong>改白名單比對為全路徑（namespace + name）</strong>，並移除所有無條件略過前綴。
-        更強的做法是把偵測邏輯的信任來源換成 SROS2 憑證本身——有憑證才算合法，不靠名稱白名單。
-        目前漏洞已記錄在 Module B 的 AnomalyDetector 中，等 SAC 訓練完成後一起修補。
+        <strong>應用層</strong>：HMAC envelope v3（channel + ts + nonce + ReplayCache）+ 檔案簽章 + read-only param + 行為 IDS D1–D6 + cascade quiet window。
+        <strong>自動化驗證</strong>：<code>pytest tests/test_security.py</code> 24 個測試全綠（HMAC 7 / 檔案完整性 5 / patrol 邊界 3 / scan 異常 5 / fingerprint 3 / nonce-replay 1）。
+        <strong>合規對齊</strong>：IEC 62443-3-3 17/17 SR 對應、NIST CSF v2.0 六大 Function 全覆蓋。
+        <strong>BIA</strong>：年化預期損失（ALE）從 $7,805/yr 降至 $513/yr（降幅 93.4%），修補 ROI payback 1.54 年。
+        <strong>殘餘風險</strong>：SROS2 Permissive 模式 + HMAC 密鑰集中化 — 列入 90 天 SROS2 Enforce migration 計畫。
       </p>
     </div>
   </div>
@@ -652,16 +661,16 @@
     <p class="tag">Tech Stack</p>
     <h2>用到的東西</h2>
     <div class="rule"></div>
-    <div class="tech-row"><div class="tech-cat">機器人框架</div><div class="badges"><span class="badge">ROS2 Humble</span><span class="badge">Gazebo Harmonic</span><span class="badge">TurtleBot3 Burger</span><span class="badge">SROS2</span><span class="badge">ros_gz_bridge</span></div></div>
-    <div class="tech-row"><div class="tech-cat">深度強化學習</div><div class="badges"><span class="badge">PyTorch + CUDA</span><span class="badge">Stable Baselines3 2.8</span><span class="badge">Gymnasium 1.2</span><span class="badge">RTX 5070 Laptop</span><span class="badge">TensorBoard</span></div></div>
-    <div class="tech-row"><div class="tech-cat">資安 / 密碼學</div><div class="badges"><span class="badge">X.509 / PKI</span><span class="badge">AES-GCM</span><span class="badge">OpenSSL</span><span class="badge">DDS Security 1.1</span><span class="badge">HMAC-SHA256</span></div></div>
-    <div class="tech-row"><div class="tech-cat">LLM 模糊測試</div><div class="badges"><span class="badge">GPT-4o / GPT-4o-mini</span><span class="badge">Docker Sandbox</span><span class="badge">AddressSanitizer</span><span class="badge">SQLite</span><span class="badge">asyncio</span></div></div>
+    <div class="tech-row"><div class="tech-cat">機器人框架</div><div class="badges"><span class="badge">ROS2 Jazzy</span><span class="badge">Gazebo Garden</span><span class="badge">TurtleBot3 Burger</span><span class="badge">SROS2 (Permissive)</span><span class="badge">ros_gz_bridge</span></div></div>
+    <div class="tech-row"><div class="tech-cat">深度強化學習</div><div class="badges"><span class="badge">PyTorch + CUDA</span><span class="badge">Stable Baselines3 2.8</span><span class="badge">sb3-contrib (TQC)</span><span class="badge">Gymnasium 1.2</span><span class="badge">RTX 5070</span><span class="badge">TensorBoard</span></div></div>
+    <div class="tech-row"><div class="tech-cat">資安 / 密碼學</div><div class="badges"><span class="badge">HMAC-SHA256</span><span class="badge">envelope v3 (channel+nonce+ts)</span><span class="badge">ReplayCache (LRU+TTL)</span><span class="badge">file <code>.sha256.hmac</code></span><span class="badge">DDS Security 1.1</span></div></div>
+    <div class="tech-row"><div class="tech-cat">紅隊 + 合規</div><div class="badges"><span class="badge">CVSS v3.1</span><span class="badge">CWE</span><span class="badge">STRIDE</span><span class="badge">IEC 62443-3-3</span><span class="badge">NIST CSF v2.0</span><span class="badge">NIST SP 800-82</span><span class="badge">pytest</span></div></div>
     <div class="tech-row"><div class="tech-cat">開發環境</div><div class="badges"><span class="badge">WSL2 Ubuntu 24.04</span><span class="badge">Python 3.12</span><span class="badge">VS Code </span></div></div>
   </div>
 </section>
 
 <footer>
-  <strong>工廠安全巡邏機器人</strong> &nbsp;·&nbsp; ROS2 DDS Security + SAC Navigation &nbsp;·&nbsp; 2026
+  <strong>工廠安全巡邏機器人</strong> &nbsp;·&nbsp; ROS2 DDS Security + TQC Navigation + Red-Team Hardened &nbsp;·&nbsp; 2026
 </footer>
 
 <script>
